@@ -15,7 +15,9 @@
 #include "ota.h"
 #include "audio_service.h"
 #include "device_state_event.h"
+#if CONFIG_LOCAL_ASR_ENABLE
 #include "local_asr.h"
+#endif
 
 
 #define MAIN_EVENT_SCHEDULE (1 << 0)
@@ -25,8 +27,10 @@
 #define MAIN_EVENT_ERROR (1 << 4)
 #define MAIN_EVENT_CHECK_NEW_VERSION_DONE (1 << 5)
 #define MAIN_EVENT_CLOCK_TICK (1 << 6)
+#if CONFIG_LOCAL_ASR_ENABLE
 #define MAIN_EVENT_OFFLINE_COMMAND (1 << 7)
 #define MAIN_EVENT_OFFLINE_TIMEOUT (1 << 8)
+#endif
 
 
 enum AecMode {
@@ -67,12 +71,14 @@ public:
     void PlaySound(const std::string_view& sound);
     AudioService& GetAudioService() { return audio_service_; }
 
+#if CONFIG_LOCAL_ASR_ENABLE
     // Offline mode
     void EnterOfflineMode();
     void ExitOfflineMode();
     void ExecuteOfflineCommand(int cmd_id, const std::string& command, const std::string& display);
     bool IsOfflineMode() const { return offline_mode_; }
     LocalAsr& GetLocalAsr() { return local_asr_; }
+#endif
 
 private:
     Application();
@@ -88,10 +94,12 @@ private:
     AecMode aec_mode_ = kAecOff;
     std::string last_error_message_;
     AudioService audio_service_;
+#if CONFIG_LOCAL_ASR_ENABLE
     LocalAsr local_asr_;
+    bool offline_mode_ = false;
+#endif
 
     bool has_server_time_ = false;
-    bool offline_mode_ = false;
     bool aborted_ = false;
     int clock_ticks_ = 0;
     TaskHandle_t check_new_version_task_handle_ = nullptr;

@@ -584,6 +584,37 @@ config CUSTOM_WAKE_WORD_THRESHOLD
     help
         Custom Wake Word Threshold, range 1-99, the smaller the more sensitive, default 20
 
+config LOCAL_ASR_ENABLE
+    bool "Enable Offline Voice Command Recognition"
+    default y
+    depends on USE_CUSTOM_WAKE_WORD || USE_AFE_WAKE_WORD
+    help
+        When the server is unreachable, fall back to local voice command
+        recognition using ESP-SR multinet. The device listens for pre-defined
+        commands (e.g., "da kai deng", "guan bi deng") and executes them
+        locally without internet connectivity.
+
+if LOCAL_ASR_ENABLE
+
+config LOCAL_ASR_DURATION_MS
+    int "Offline listening window (ms)"
+    default 4000
+    range 2000 10000
+    help
+        Maximum time the device listens for a voice command after wake word
+        in offline mode. Longer = more time to speak but higher power use.
+
+config LOCAL_ASR_THRESHOLD
+    int "Command detection confidence (%)"
+    default 30
+    range 10 99
+    help
+        Lower = more sensitive (more false positives).
+        Higher = less sensitive (more missed commands).
+        Default 30 = 0.30 threshold.
+
+endif
+
 config SEND_WAKE_WORD_DATA
     bool "Send Wake Word Data"
     default y

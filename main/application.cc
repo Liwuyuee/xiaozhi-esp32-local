@@ -9,7 +9,9 @@
 #include "mcp_server.h"
 #include "assets.h"
 #include "settings.h"
+#if CONFIG_LOCAL_ASR_ENABLE
 #include "local_asr.h"
+#endif
 
 #include <cstring>
 #include <ctime>
@@ -376,13 +378,12 @@ void Application::Start() {
     };
     audio_service_.SetCallbacks(callbacks);
 
-    /* Setup offline Local ASR */
-    // Models will be loaded lazily from the assets partition when available.
-    // We set up the audio callback now so audio can be routed to LocalAsr
-    // after it's initialized.
+#if CONFIG_LOCAL_ASR_ENABLE
+    /* Setup offline Local ASR callback for audio routing */
     audio_service_.SetLocalAsrCallback([this](std::vector<int16_t>&& data) {
         local_asr_.Feed(data);
     });
+#endif
 
     // Start the main event loop task with priority 3
     xTaskCreate([](void* arg) {
@@ -406,12 +407,14 @@ void Application::Start() {
     Ota ota;
     CheckNewVersion(ota);
 
+#if CONFIG_LOCAL_ASR_ENABLE
     /* Initialize offline Local ASR (after assets/models are loaded) */
     if (local_asr_.Initialize(nullptr)) {
         ESP_LOGI(TAG, "Offline Local ASR initialized successfully");
     } else {
         ESP_LOGW(TAG, "Offline Local ASR not available (no ESP-SR multinet model found)");
     }
+#endif
 
     // Initialize the protocol
     display->SetStatus(Lang::Strings::LOADING_PROTOCOL);
@@ -581,9 +584,12 @@ void Application::MainEventLoop() {
             MAIN_EVENT_WAKE_WORD_DETECTED |
             MAIN_EVENT_VAD_CHANGE |
             MAIN_EVENT_CLOCK_TICK |
-            MAIN_EVENT_ERROR |
-            MAIN_EVENT_OFFLINE_COMMAND |
-            MAIN_EVENT_OFFLINE_TIMEOUT, pdTRUE, pdFALSE, portMAX_DELAY);
+            MAIN_EVENT_ERROR
+#if CONFIG_LOCAL_ASR_ENABLE
+            | MAIN_EVENT_OFFLINE_COMMAND |
+            MAIN_EVENT_OFFLINE_TIMEOUT
+#endif
+            , pdTRUE, pdFALSE, portMAX_DELAY);
 
         if (bits & MAIN_EVENT_ERROR) {
             SetDeviceState(kDeviceStateIdle);
@@ -631,6 +637,7 @@ void Application::MainEventLoop() {
             }
         }
 
+#if CONFIG_LOCAL_ASR_ENABLE
         if (bits & MAIN_EVENT_OFFLINE_COMMAND) {
             if (device_state_ == kDeviceStateOfflineListening) {
                 SetDeviceState(kDeviceStateOfflineProcessing);
@@ -662,6 +669,7 @@ void Application::MainEventLoop() {
                 ExitOfflineMode();
             }
         }
+#endif
     }
 }
 
@@ -676,13 +684,15 @@ void Application::OnWakeWordDetected() {
         if (!protocol_->IsAudioChannelOpened()) {
             SetDeviceState(kDeviceStateConnecting);
             if (!protocol_->OpenAudioChannel()) {
+#if CONFIG_LOCAL_ASR_ENABLE
                 // Connection failed → try offline mode
-                if (local_asr_.IsRunning() || !local_asr_.GetFeedSize()) {
-                    // Offline ASR not available, re-enable wake word and stay idle
-                    audio_service_.EnableWakeWordDetection(true);
+                if (!local_asr_.IsRunning() && local_asr_.GetFeedSize() > 0) {
+                    EnterOfflineMode();
                     return;
                 }
-                EnterOfflineMode();
+#endif
+                // Offline ASR not available, re-enable wake word and stay idle
+                audio_service_.EnableWakeWordDetection(true);
                 return;
             }
         }
@@ -702,11 +712,13 @@ void Application::OnWakeWordDetected() {
         // Play the pop up sound to indicate the wake word is detected
         audio_service_.PlaySound(Lang::Sounds::OGG_POPUP);
 #endif
+#if CONFIG_LOCAL_ASR_ENABLE
     } else if (device_state_ == kDeviceStateOfflineListening) {
         // Wake word detected again during offline listening -> ignore or abort
         ESP_LOGI(TAG, "Wake word detected during offline listening, resetting timer");
         local_asr_.Reset();
         local_asr_.Start();
+#endif
     } else if (device_state_ == kDeviceStateSpeaking) {
         AbortSpeaking(kAbortReasonWakeWordDetected);
     } else if (device_state_ == kDeviceStateActivating) {
@@ -722,6 +734,7 @@ void Application::AbortSpeaking(AbortReason reason) {
     }
 }
 
+#if CONFIG_LOCAL_ASR_ENABLE
 void Application::EnterOfflineMode() {
     ESP_LOGI(TAG, "Entering offline listening mode");
     offline_mode_ = true;
@@ -834,6 +847,7 @@ void Application::ExecuteOfflineCommand(int cmd_id, const std::string& command, 
     vTaskDelay(pdMS_TO_TICKS(2000));
     ExitOfflineMode();
 }
+#endif /* CONFIG_LOCAL_ASR_ENABLE */
 
 void Application::SetListeningMode(ListeningMode mode) {
     listening_mode_ = mode;
@@ -882,6 +896,7 @@ void Application::SetDeviceState(DeviceState state) {
                 audio_service_.EnableWakeWordDetection(false);
             }
             break;
+#if CONFIG_LOCAL_ASR_ENABLE
         case kDeviceStateOfflineListening:
             display->SetStatus("离线聆听");
             display->SetEmotion("neutral");
@@ -890,6 +905,7 @@ void Application::SetDeviceState(DeviceState state) {
             display->SetStatus("处理中");
             display->SetEmotion("processing");
             break;
+#endif
         case kDeviceStateSpeaking:
             display->SetStatus(Lang::Strings::SPEAKING);
 
