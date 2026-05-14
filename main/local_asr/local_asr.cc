@@ -170,28 +170,42 @@ void LocalAsr::Feed(const std::vector<int16_t>& data) {
         multinet_model_data_, const_cast<int16_t*>(data.data()));
 
     if (mn_state == ESP_MN_STATE_DETECTING) {
+        // Still detecting, accumulate more audio
         return;
     } else if (mn_state == ESP_MN_STATE_DETECTED) {
         esp_mn_results_t* mn_result = multinet_->get_results(multinet_model_data_);
-        for (int i = 0; i < mn_result->num && running_; i++) {
-            int cmd_id = mn_result->command_id[i];
-            if (cmd_id >= 1 && cmd_id <= kCommandCount) {
-                const auto& cmd = kCommands[cmd_id - 1];
-                last_command_ = cmd.phrase;
-                last_display_ = cmd.display;
-                ESP_LOGI(TAG, "Command detected: id=%d, phrase=%s, display=%s, prob=%.3f",
-                         cmd_id, cmd.phrase, cmd.display, mn_result->prob[i]);
+        if (mn_result->num > 0) {
+            // Log ALL recognition results for debugging
+            ESP_LOGI(TAG, "=== MN RESULT ===");
+            ESP_LOGI(TAG, "  raw_string: %s", mn_result->raw_string);
+            ESP_LOGI(TAG, "  string: %s", mn_result->string);
+            for (int i = 0; i < mn_result->num && running_; i++) {
+                int cmd_id = mn_result->command_id[i];
+                ESP_LOGI(TAG, "  result[%d]: id=%d prob=%.3f", i, cmd_id, mn_result->prob[i]);
 
-                running_ = false;
-                if (command_detected_callback_) {
-                    command_detected_callback_(cmd_id, cmd.phrase, cmd.display);
+                if (cmd_id >= 1 && cmd_id <= kCommandCount) {
+                    const auto& cmd = kCommands[cmd_id - 1];
+                    last_command_ = cmd.phrase;
+                    last_display_ = cmd.display;
+                    ESP_LOGI(TAG, ">> COMMAND MATCHED: id=%d, display=%s, prob=%.3f",
+                             cmd_id, cmd.display, mn_result->prob[i]);
+
+                    running_ = false;
+                    if (command_detected_callback_) {
+                        command_detected_callback_(cmd_id, cmd.phrase, cmd.display);
+                    }
+                } else {
+                    ESP_LOGI(TAG, "  (unregistered command id=%d)", cmd_id);
                 }
             }
+        } else {
+            // Detected but no command matched
+            ESP_LOGI(TAG, "MN detected but no command matched (grammar mismatch)");
         }
         multinet_->clean(multinet_model_data_);
     } else if (mn_state == ESP_MN_STATE_TIMEOUT) {
-        // Per-chunk timeout within the multinet, just clean and continue
-        ESP_LOGW(TAG, "Multinet chunk timeout, cleaning state");
+        // Per-chunk timeout: no command detected in this audio segment
+        ESP_LOGD(TAG, "Multinet chunk timeout");
         multinet_->clean(multinet_model_data_);
     }
 }
