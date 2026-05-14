@@ -1,0 +1,10 @@
+menu "Espressif SCCB Configurations"
+
+    config ESP_SCCB_TRANS_TIMEOUT_DEFAULT
+    int "SCCB transmit wait timeout in ms"
+    range -1 2000
+    default 500
+    help
+        Timeout for SCCB(Implemented by I2C master) transmit. In ms.
+        Use -1 to disable timeout and wait forever.
+endmenu

@@ -1,0 +1,17 @@
+description: Espressif JPEG encoder and decoder
+issues: https://github.com/espressif/esp-adf/issues
+repository: git://github.com/espressif/esp-adf-libs.git
+repository_info:
+  commit_sha: 35c37e1656db36dbf13b9aee8064d1b59f482f6c
+  path: esp_new_jpeg
+targets:
+- esp32
+- esp32s2
+- esp32s3
+- esp32p4
+- esp32c2
+- esp32c3
+- esp32c5
+- esp32c6
+url: https://github.com/espressif/esp-adf-libs/tree/master/esp_new_jpeg
+version: 0.6.1

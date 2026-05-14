@@ -1,0 +1,38 @@
+dependencies:
+  cmake_utilities: 0.*
+  esp_cam_sensor:
+    version: 1.5.*
+  esp_h264:
+    rules:
+    - if: target in [esp32p4]
+    version: 1.0.4
+  esp_ipa:
+    rules:
+    - if: target in [esp32p4]
+    version: ~1.2.0
+  idf: '>=5.4'
+  usb:
+    rules:
+    - if: target in [esp32p4, esp32s3]
+    - if: idf_version >=6.0
+    version: '*'
+  usb_host_uvc:
+    rules:
+    - if: target in [esp32p4, esp32s3]
+    version: 2.3.*
+description: A framework designed to support Linux V4L2, multiple cameras and video
+  streaming.
+issues: https://github.com/espressif/esp-video-components/issues
+repository: git://github.com/espressif/esp-video-components.git
+repository_info:
+  commit_sha: b914e8cae13055969aaa0d58ffd7e65368588d41
+  path: esp_video
+targets:
+- esp32p4
+- esp32s3
+- esp32c3
+- esp32c5
+- esp32c6
+- esp32c61
+url: https://github.com/espressif/esp-video-components/tree/master/esp_video
+version: 1.3.1

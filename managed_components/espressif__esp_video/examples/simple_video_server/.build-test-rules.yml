@@ -1,0 +1,9 @@
+esp_video/examples/simple_video_server:
+  enable:
+    - if: IDF_TARGET in ["esp32p4", "esp32s3", "esp32c3", "esp32c6", "esp32c5"]
+  depends_filepatterns:
+    - simple_video_server/**/*
+  depends_components:
+    - esp_video
+    - esp_cam_sensor
+    - esp_sccb_intf

@@ -1,0 +1,18 @@
+dependencies:
+  cmake_utilities:
+    version: 0.*
+  espressif/esp_new_jpeg:
+    version: 0.6.*
+  espressif/freetype: 2.*
+  idf:
+    version: '>=5.0'
+description: ESP Emote GFX - A lightweight graphics framework component for ESP-IDF,
+  optimized for efficient graphics rendering.
+documentation: https://github.com/espressif2022/esp_emote_gfx
+issues: https://github.com/espressif2022/esp_emote_gfx/issues
+repository: git://github.com/espressif2022/esp_emote_gfx.git
+repository_info:
+  commit_sha: 7ee69b15da906f8c03e3ee9e38ec9732417f9445
+  path: .
+url: https://github.com/espressif2022/esp_emote_gfx
+version: 1.2.0~1

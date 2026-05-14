@@ -1,0 +1,8 @@
+dependencies:
+  esp_video: {}
+  esp_wifi_remote:
+    version: '*'
+  espressif/mdns: ^1.0.3
+  idf: '>=5.3'
+  protocol_examples_common:
+    path: ${IDF_PATH}/examples/common_components/protocol_examples_common

@@ -1,0 +1,9 @@
+dependencies:
+  esp_mmap_assets:
+    version: 1.*
+  espressif/esp-box: ^3.1.0~1
+  idf: '>=5.0'
+  image_player:
+    version: '*'
+  lvgl/lvgl:
+    version: '>=8,<9'

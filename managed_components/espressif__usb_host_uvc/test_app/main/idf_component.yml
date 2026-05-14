@@ -1,0 +1,13 @@
+## IDF Component Manager Manifest File
+dependencies:
+  # Needed as DUT
+  espressif/usb_host_uvc:
+    version: "*"
+    override_path: "../../../usb_host_uvc"
+
+  espressif/usb:
+    version: "*"
+    override_path: "../../../../../usb"
+    rules:                                      # Both if clauses must be fulfilled to override the component
+      - if: "$ENV_VAR_USB_COMP_MANAGED == yes"  # Environmental variable to select between managed (esp-usb) and native (esp-idf) USB Component
+      - if: "idf_version >=5.4"                 # Use managed component only for 5.4 and above

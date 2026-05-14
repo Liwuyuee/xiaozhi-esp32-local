@@ -1,0 +1,6 @@
+dependencies:
+  esp_new_jpeg:
+    rules:
+    - if: target not in [esp32c61]
+    version: '*'
+  idf: '>=5.4'

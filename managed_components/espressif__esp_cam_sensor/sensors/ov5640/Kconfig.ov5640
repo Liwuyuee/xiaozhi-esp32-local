@@ -1,0 +1,104 @@
+menuconfig CAMERA_OV5640
+    bool "OV5640"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED || SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the OV5640 CMOS image sensor.
+
+if CAMERA_OV5640
+    menu "Auto detect OV5640"
+        config CAMERA_OV5640_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default n
+            depends on SOC_LCDCAM_CAM_SUPPORTED
+            help
+                When enabled, the OV5640 sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(ov5640_detect) in your application.
+
+        config CAMERA_OV5640_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default y
+            depends on SOC_MIPI_CSI_SUPPORTED
+            help
+                When enabled, the OV5640 sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(ov5640_detect) in your application.
+    endmenu
+
+    choice CAMERA_OV5640_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_OV5640_MIPI_RGB565_1280X720_14FPS
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            This option allows you to select the default video format for the OV5640 sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_OV5640_MIPI_RGB565_1280X720_14FPS
+            bool "RGB565 1280x720 14fps, MIPI 2-lane, 24M input"
+            help
+                RGB565 color format at 1280x720 resolution (HD) with 14fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+    endchoice # CAMERA_OV5640_MIPI_DEFAULT_FMT
+
+    config CAMERA_OV5640_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default 0 if CAMERA_OV5640_MIPI_RGB565_1280X720_14FPS
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+
+    choice CAMERA_OV5640_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_OV5640_DVP_YUV422_800X600_10FPS
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        help
+            This option allows you to select the default video format for the OV5640 sensor
+            when it is initialized on the DVP interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_OV5640_DVP_YUV422_800X600_10FPS
+            bool "YUV422 800x600 10fps, DVP 8-bit, 24M input"
+            help
+                YUV422 color format at 800x600 resolution (SVGA) with 10fps framerate.
+                Requires 8-bit DVP interface and 24MHz input clock.
+        config CAMERA_OV5640_DVP_RGB565_800X600_10FPS
+            bool "RGB565 800x600 10fps, DVP 8-bit, 24M input"
+            help
+                RGB565 color format at 800x600 resolution (SVGA) with 10fps framerate.
+                Requires 8-bit DVP interface and 24MHz input clock.
+    endchoice # CAMERA_OV5640_DVP_DEFAULT_FMT
+
+    config CAMERA_OV5640_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        default 0 if CAMERA_OV5640_DVP_YUV422_800X600_10FPS
+        default 1 if CAMERA_OV5640_DVP_RGB565_800X600_10FPS
+        help
+            Sets the default configuration for the DVP interface.
+            Use query_support_formats() API to get more format options.
+
+    config CAMERA_OV5640_CSI_LINESYNC_ENABLE
+        bool "Enable CSI line synchronization"
+        default y
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            Enable MIPI CSI-2 line synchronization by sending short packets for each line.
+
+            When enabled, the sensor will send line start/end short packets that help
+            the CSI receiver synchronize with each video line. This improves timing
+            accuracy and reduces the chance of frame corruption.
+
+            Benefits:
+            - Better frame synchronization
+            - Reduced image artifacts
+            - Improved timing accuracy
+            - Enhanced error detection
+
+            Recommended: Keep enabled for reliable video capture unless specifically
+            required to disable for compatibility with certain receivers.
+endif

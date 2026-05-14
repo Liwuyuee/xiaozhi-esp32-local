@@ -1,0 +1,10 @@
+menu "Animation Player Configuration"
+
+    config ANIM_PLAYER_DEFAULT_FPS
+        int "Default frame rate"
+        range 1 60
+        default 30
+        help
+            Default frame rate for animation player in frames per second.
+
+endmenu

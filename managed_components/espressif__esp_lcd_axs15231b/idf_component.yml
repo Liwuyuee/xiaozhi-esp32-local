@@ -1,0 +1,14 @@
+dependencies:
+  cmake_utilities: 0.*
+  esp_lcd_touch:
+    public: true
+    version: ^1
+  idf: '>5.0.4,!=5.1.1'
+description: ESP LCD & Touch AXS15231B
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: 59a708e5356f7922cda1ed026676477afafd9676
+  path: components/display/lcd/esp_lcd_axs15231b
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/display/lcd/esp_lcd_axs15231b
+version: 1.0.1~1

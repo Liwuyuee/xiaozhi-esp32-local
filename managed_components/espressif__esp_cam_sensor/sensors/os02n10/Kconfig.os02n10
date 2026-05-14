@@ -1,0 +1,131 @@
+menuconfig CAMERA_OS02N10
+    bool "OS02N10"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED
+    help
+        Enable support for the OS02N10 CMOS image sensor.
+
+if CAMERA_OS02N10
+    menu "Auto detect OS02N10"
+        config CAMERA_OS02N10_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default y
+            depends on SOC_MIPI_CSI_SUPPORTED
+            help
+                When enabled, the OS02N10 sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(os02n10_detect) in your application.
+    endmenu
+
+    config CAMERA_OS02N10_SID_HIGH
+        bool "Set SID pin to high"
+        default n
+        help
+            This option allows you to configure the sensor ID. When the SID pin uses a high level, 
+            the sensor ID will be configured as 0x3d, otherwise, the sensor ID will be configured as 0x3c.
+
+    choice CAMERA_OS02N10_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_OS02N10_MIPI_RAW8_1920X1080_25FPS
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            This option allows you to select the default video format for the OS02N10 sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_OS02N10_MIPI_RAW10_1920X1080_25FPS
+            bool "RAW10 1920x1080 25fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1920x1080 resolution (HD) with 25fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OS02N10_MIPI_RAW10_1280X720_50FPS
+            bool "RAW10 1280x720 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1280x720 resolution (HD) with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OS02N10_MIPI_RAW8_1920X1080_25FPS
+            bool "RAW8 1920x1080 25fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 1920x1080 resolution (HD) with 25fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OS02N10_MIPI_RAW8_1280X720_50FPS
+            bool "RAW8 1280x720 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 1280x720 resolution (HD) with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OS02N10_MIPI_RAW8_960x540_25FPS
+            bool "RAW8 960x540 25fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 960x540 resolution with 25fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+    endchoice # CAMERA_OS02N10_MIPI_DEFAULT_FMT
+
+    config CAMERA_OS02N10_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default 0 if CAMERA_OS02N10_MIPI_RAW10_1920X1080_25FPS
+        default 1 if CAMERA_OS02N10_MIPI_RAW10_1280X720_50FPS
+        default 2 if CAMERA_OS02N10_MIPI_RAW8_1920X1080_25FPS
+        default 3 if CAMERA_OS02N10_MIPI_RAW8_1280X720_50FPS
+        default 4 if CAMERA_OS02N10_MIPI_RAW8_960x540_25FPS
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+
+    config CAMERA_OS02N10_ABSOLUTE_GAIN_LIMIT
+            int "Maximum absolute gain limit (x1000)"
+            default 10000
+            range 4000 16468
+            help
+                Set the maximum gain limit that can be applied by upper-level applications.
+
+                Value is gain multiplied by 1000 to avoid floating-point arithmetic:
+                - 4000 = 4x gain (minimum)
+                - 16000 = 16x gain (default)
+                - 16468 = 16.468x gain (maximum)
+
+                Lower values reduce noise but may limit low-light performance.
+                Higher values improve low-light sensitivity but increase noise and
+                may cause sensor overheating.
+
+    choice CAMERA_OS02N10_IPA_JSON_CONFIGURATION_FILE
+        prompt "IPA Configuration File"
+        default CAMERA_OS02N10_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+        help
+            Select the Image Processing Algorithm (IPA) JSON configuration file
+            for the OS02N10 sensor.
+
+        config CAMERA_OS02N10_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+            bool "Use default configuration"
+            help
+                Use the built-in default IPA configuration file:
+                "esp_cam_sensor/sensors/os02n10/cfg/os02n10_default.json"
+
+                This configuration provides optimized settings for general use cases
+                and is recommended for most applications.
+
+        config CAMERA_OS02N10_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+            bool "Use custom configuration"
+            help
+                Use a custom IPA configuration file with your own optimized settings.
+
+                This option allows you to fine-tune sensor parameters for specific
+                lighting conditions, color requirements, or application needs.
+
+                You must specify the custom file path in the configuration below.
+    endchoice
+
+    config CAMERA_OS02N10_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE_PATH
+        string "Custom IPA configuration file path"
+        depends on CAMERA_OS02N10_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+        help
+            Specify the path to your custom OS02N10 IPA JSON configuration file.
+
+            The path is relative to your project root directory.
+
+            Example: "components/my_camera_config/os02n10_custom.json"
+
+            Ensure the file exists and contains valid JSON configuration
+            parameters compatible with the OS02N10 sensor.
+endif

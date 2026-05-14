@@ -1,0 +1,309 @@
+menu "Espressif Video Configuration"
+
+    config ESP_VIDEO_ENABLE_H264_VIDEO_DEVICE
+        bool
+        default n
+
+    config ESP_VIDEO_ENABLE_JPEG_VIDEO_DEVICE
+        bool
+        default n
+
+    config ESP_VIDEO_ENABLE_ISP
+        bool
+        default n
+
+    config ESP_VIDEO_ENABLE_BITSCRAMBLER
+        bool
+        default n
+        depends on SOC_BITSCRAMBLER_SUPPORTED
+
+    config ESP_VIDEO_ENABLE_DATA_PREPROCESSING
+        bool
+        default n
+
+    config ESP_VIDEO_CHECK_PARAMETERS
+        bool "Check Video Function Parameters"
+        default y
+        help
+            Enable runtime parameter validation for all video core functions.
+
+            When enabled, video functions will check input parameters for validity
+            and return appropriate error codes for invalid inputs. This helps
+            catch programming errors and improves system reliability.
+
+            Disabling this option reduces code size and improves performance slightly,
+            but removes safety checks that help identify incorrect API usage.
+
+            Recommended: Keep enabled during development, consider disabling
+            for production builds where performance is critical.
+
+    menuconfig ESP_VIDEO_ENABLE_MIPI_CSI_VIDEO_DEVICE
+        bool "Enable MIPI-CSI based Video Device"
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default y
+        select ESP_VIDEO_ENABLE_ISP
+        help
+            Enable MIPI Camera Serial Interface video device support.
+
+            MIPI-CSI is a high-speed serial interface standard widely used
+            in mobile and embedded applications for connecting camera sensors.
+
+            Features:
+            - High-speed differential signaling
+            - Multiple data lanes (1-4 lanes typical)
+            - Low power consumption
+            - Suitable for high-resolution sensors
+
+            Automatically enables ISP support for image processing.
+
+    if ESP_VIDEO_ENABLE_MIPI_CSI_VIDEO_DEVICE
+
+        config ESP_VIDEO_DISABLE_MIPI_CSI_DRIVER_BACKUP_BUFFER
+            bool "Disable MIPI-CSI Driver Backup Buffer"
+            default y
+            help
+                Disable the internal backup buffer in the MIPI-CSI driver.
+
+                When enabled, the video system will always reserve one video buffer
+                specifically for the MIPI-CSI driver to receive incoming data,
+                eliminating the need for an additional backup buffer.
+
+                Benefits:
+                - Reduced memory usage
+                - More predictable buffer management
+                - Lower latency in buffer handling
+
+                Requirements:
+                - Video buffer count must be greater than 1
+
+                Recommended: Keep enabled unless the application has to setup only one video buffer.
+    endif
+
+    config ESP_VIDEO_ENABLE_DVP_VIDEO_DEVICE
+        bool "Enable DVP based Video Device"
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        default y
+        help
+            Select this option, enable DVP based video device.
+
+            Enable Digital Video Port (DVP) video device support.
+
+            DVP is a parallel interface for connecting camera sensors.
+
+            Features:
+            - Parallel data transmission (8-bit typical)
+            - Separate sync signals (VSYNC)
+            - Pixel clock for synchronization
+            - Lower bandwidth than MIPI-CSI
+
+            Suitable for moderate resolution sensors and applications
+            where MIPI-CSI is not available.
+
+    menuconfig ESP_VIDEO_ENABLE_SPI_VIDEO_DEVICE
+        bool "Enable SPI based Video Device"
+        depends on SOC_GPSPI_SUPPORTED
+        select ESP_VIDEO_ENABLE_DATA_PREPROCESSING
+        select CAM_CTLR_SPI_DISABLE_BACKUP_BUFFER
+        select CAM_CTLR_SPI_DISABLE_AUTO_DECODE
+        default n if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3
+        default y
+        help
+            Enable Serial Peripheral Interface (SPI) video device support.
+
+            SPI interface is typically used for lower resolution camera sensors
+            or special applications where parallel interfaces are not suitable.
+
+            Features:
+            - Serial data transmission
+            - Lower GPIO pin count requirement
+            - Flexible clock rates
+            - Limited bandwidth compared to parallel interfaces
+
+            Automatically enables data preprocessing for format conversion.
+
+            Best for: Low-resolution sensors, prototype development,
+            or applications with limited GPIO availability.
+
+    if ESP_VIDEO_ENABLE_SPI_VIDEO_DEVICE
+
+        config ESP_VIDEO_ENABLE_THE_SECOND_SPI_VIDEO_DEVICE
+            bool "Enable The Second SPI Video Device"
+            default n
+            depends on IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3
+            help
+                Enable the second Serial Peripheral Interface (SPI) video device support.
+
+                Creates the second video device interface accessible at /dev/video4,
+                the device uses an extra SPI port for receiving image stream data from camera sensor.
+
+                Features:
+                - Serial data transmission protocol
+                - Compatible with SPI-based camera modules
+                - Lower GPIO pin count requirement compared to parallel interfaces,
+                  but still requires some GPIO pins for SPI communication.
+
+                Note: Requires ESP_VIDEO_ENABLE_SPI_VIDEO_DEVICE to be enabled.
+    endif
+
+    menuconfig ESP_VIDEO_ENABLE_USB_UVC_VIDEO_DEVICE
+        bool "Enable USB-UVC based Video Device"
+        depends on SOC_USB_OTG_SUPPORTED
+        default n
+        help
+            Enable USB Video Class (UVC) video device support.
+
+            UVC is a standard USB device class that provides a universal
+            interface for video devices like USB cameras, webcams, and
+            video capture devices.
+
+            Features:
+            - Plug-and-play compatibility with standard USB cameras
+            - No driver installation required for UVC-compliant devices
+            - Support for multiple video formats and resolutions
+            - Standard USB power delivery for connected devices
+            - Hot-plug detection and device enumeration
+
+            Supported device types:
+            - USB webcams and external cameras
+            - USB video capture devices
+            - Professional USB cameras
+            - Streaming devices with UVC support
+
+            Best for: Applications requiring external camera connectivity,
+            surveillance systems with USB cameras, or scenarios where
+            flexibility in camera selection is important.
+
+            Note: Requires USB OTG host functionality and sufficient
+            power supply for connected USB devices.
+
+    config ESP_VIDEO_ENABLE_HW_H264_VIDEO_DEVICE
+        bool "Enable Hardware H.264 based Video Device"
+        depends on IDF_TARGET_ESP32P4
+        select ESP_VIDEO_ENABLE_H264_VIDEO_DEVICE
+        default n
+        help
+            Enable hardware-accelerated H.264 encoding video device support.
+
+            Uses dedicated H.264 encoding hardware for efficient video compression
+            with minimal CPU overhead.
+
+            Features:
+            - Hardware-accelerated encoding
+            - Low CPU usage
+            - Real-time compression capability
+            - Industry-standard H.264 format
+
+            Available on ESP32-P4 and other chips with H.264 codec support.
+
+            Best for: Video streaming, recording applications requiring
+            efficient compression with minimal CPU impact.
+
+    config ESP_VIDEO_ENABLE_HW_JPEG_VIDEO_DEVICE
+        bool "Enable Hardware JPEG based Video Device"
+        depends on SOC_JPEG_CODEC_SUPPORTED
+        select ESP_VIDEO_ENABLE_JPEG_VIDEO_DEVICE
+        default n
+        help
+            Enable hardware-accelerated JPEG image compression video device support.
+
+            Uses dedicated JPEG encoding hardware for efficient image compression
+            with minimal CPU overhead.
+
+            Features:
+            - Hardware-accelerated compression
+            - Low CPU usage
+            - Fast encoding speed
+            - Standard JPEG format output
+
+            Available on ESP32-P4 and other chips with JPEG codec support.
+
+            Best for: Image capture, surveillance systems, and applications
+            requiring fast JPEG compression.
+
+    menuconfig ESP_VIDEO_ENABLE_ISP_VIDEO_DEVICE
+        bool "Enable ISP based Video Device"
+        depends on SOC_ISP_SUPPORTED
+        default y
+        select ESP_VIDEO_ENABLE_ISP
+        help
+            Enable Image Signal Processor (ISP) video device support.
+
+            The ISP provides advanced image processing capabilities including
+            color correction, noise reduction, and format conversion.
+
+            Features:
+            - Hardware-accelerated image processing
+            - Auto exposure, white balance, focus algorithms
+            - Color space conversion
+            - Noise reduction and enhancement
+
+            Note: This can be disabled if using camera sensors with
+            built-in ISP capabilities to avoid redundant processing.
+
+    if ESP_VIDEO_ENABLE_ISP_VIDEO_DEVICE
+
+        config ESP_VIDEO_ENABLE_ISP_PIPELINE_CONTROLLER
+            bool "Enable ISP Pipeline Controller"
+            default n
+            help
+                Enable the ISP pipeline controller for automated image processing.
+
+                Creates a dedicated task ("isp_task") that:
+                - Reads statistics from ISP hardware modules
+                - Processes data through image processing algorithms
+                - Applies calculated adjustments to ISP or sensor settings
+
+                This provides automatic image quality optimization without
+                requiring manual intervention from the application.
+
+        if ESP_VIDEO_ENABLE_ISP_PIPELINE_CONTROLLER
+
+            config ISP_PIPELINE_CONTROLLER_TASK_STACK_USE_PSRAM
+                bool "ISP Controller Task Stack Use PSRAM"
+                default n
+                depends on SPIRAM
+                select FREERTOS_TASK_CREATE_ALLOW_EXT_MEM
+                help
+                    Use external PSRAM for the ISP controller task stack instead of internal DRAM.
+
+                    Trade-offs:
+                    - PSRAM: Lower memory pressure on DRAM, but potentially slower access
+                    - DRAM: Better performance and lower latency, but uses precious internal memory
+
+                    Recommended: Keep disabled (use DRAM) for better performance unless
+                    internal memory is severely constrained.
+
+            config ESP_VIDEO_ISP_PIPELINE_CONTROL_CAMERA_MOTOR
+                bool "ISP Pipeline Control Camera Motor"
+                default y
+                depends on ESP_VIDEO_ENABLE_CAMERA_MOTOR_CONTROLLER && ESP_IPA_AF_ALGORITHM
+                help
+                    Select this option, ISP pipeline controller will control the camera motor by IPA AF algorithm.
+
+                    Allow the ISP pipeline controller to automatically control the camera's
+                    autofocus motor using the Auto Focus (AF) algorithm.
+
+                    This provides hands-free autofocus operation without requiring
+                    application intervention.
+
+                    Requirements:
+                    - Compatible autofocus motor hardware
+                    - AF algorithm enabled in IPA configuration
+        endif
+    endif
+
+    config ESP_VIDEO_ENABLE_CAMERA_MOTOR_CONTROLLER
+        bool "Enable Camera Motor Controller"
+        default y
+        depends on CAMERA_MOTOR_DEVICE_USED && ESP_VIDEO_ENABLE_ISP_VIDEO_DEVICE
+        help
+            Enable support for camera autofocus motor control.
+
+            Provides a standardized interface for controlling Voice Coil Motors (VCM)
+            and other autofocus actuators commonly used in camera modules.
+
+            Required for camera modules with autofocus capabilities.
+            Disable if using only fixed-focus lenses.
+
+    rsource "./src/data_reprocessing/Kconfig.data_reprocessing"
+endmenu

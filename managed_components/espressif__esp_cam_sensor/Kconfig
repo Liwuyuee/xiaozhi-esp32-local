@@ -1,0 +1,227 @@
+menu "Espressif Camera Sensors Configurations"
+    menu "Camera Sensor Configuration"
+        menu "Select and Set Camera Sensor"
+            rsource "sensors/bf3901/Kconfig.bf3901"
+            rsource "sensors/bf3925/Kconfig.bf3925"
+            rsource "sensors/bf3a03/Kconfig.bf3a03"
+            rsource "sensors/gc0308/Kconfig.gc0308"
+            rsource "sensors/gc2145/Kconfig.gc2145"
+            rsource "sensors/os02n10/Kconfig.os02n10"
+            rsource "sensors/ov2640/Kconfig.ov2640"
+            rsource "sensors/ov2710/Kconfig.ov2710"
+            rsource "sensors/ov3660/Kconfig.ov3660"
+            rsource "sensors/ov5640/Kconfig.ov5640"
+            rsource "sensors/ov5645/Kconfig.ov5645"
+            rsource "sensors/ov5647/Kconfig.ov5647"
+            rsource "sensors/sc030iot/Kconfig.sc030iot"
+            rsource "sensors/sc035hgs/Kconfig.sc035hgs"
+            rsource "sensors/sc101iot/Kconfig.sc101iot"
+            rsource "sensors/sc202cs/Kconfig.sc202cs"
+            rsource "sensors/sc2336/Kconfig.sc2336"
+        endmenu
+
+        config CAMERA_SENSOR_SWAP_PIXEL_BYTE_ORDER
+            bool "Enable pixel byte order swapping"
+            default y if IDF_TARGET_ESP32P4
+            default n if IDF_TARGET_ESP32S3
+            depends on CAMERA_OV2640 || CAMERA_BF3901 || CAMERA_GC0308 || CAMERA_SC030IOT || CAMERA_SC101IOT || CAMERA_BF3A03 || CAMERA_OV5640
+            help
+                Enable pixel byte order swapping to match display or processing requirements.
+
+                This feature exchanges the byte order of pixel data, which is useful when interfacing
+                with different display controllers or image processing pipelines that expect specific
+                byte ordering.
+
+                Supported transformations:
+
+                RGB565 format:
+                  Original: [R₁G₁B₁][R₂G₂B₂] → Swapped: [B₁G₁R₁][B₂G₂R₂]
+                  Byte sequence: 0xRG 0xBR 0xGB → 0xBG 0xRB 0xGR
+
+                YUYV format:
+                  Original: [Y₁U₁Y₂V₁] → Swapped: [U₁Y₁V₁Y₂]
+                  Byte sequence: Y U Y V → U Y V Y
+
+                Platform compatibility:
+                - ESP32-P4: Default enabled
+                - ESP32-S3: Default disabled
+
+                Note: This option only applies to OV2640 and BF3901 sensors.
+                For other sensors, use ESP_VIDEO_ENABLE_SWAP_BYTE (ESP32-P4 only).
+
+        config CAMERA_SENSOR_XCLK_INPUT_24M
+            bool
+            default y if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C5
+            default n
+            depends on CAMERA_BF3901
+            help
+                Internal configuration flag indicating whether the chip can output 24MHz XCLK.
+
+                24MHz is a commonly used external clock frequency for CMOS camera sensors.
+                When enabled, the sensor will be configured to use timing parameters
+                optimized for 24MHz XCLK input.
+
+                This setting affects:
+                - Sensor register configuration for optimal performance at 24MHz
+                - Frame rate and timing calculations
+                - Power consumption characteristics
+
+                Note: This configuration is sensor-specific and currently only
+                applies to BF3901 sensor. Other sensors may have different
+                optimal XCLK frequencies.
+    endmenu
+
+    menu "Camera XCLK Generator Configuration"
+        config CAMERA_XCLK_USE_LEDC
+            bool "Generate XCLK using LEDC"
+            default n if IDF_TARGET_ESP32P4
+            default y
+            help
+                Use the LED Control (LEDC) peripheral to generate the external clock (XCLK) signal
+                for camera sensors.
+
+                The LEDC peripheral provides a flexible PWM-based clock generation method that is
+                compatible with most ESP32 variants. It offers good frequency accuracy and is
+                suitable for most camera sensor applications.
+
+        config CAMERA_XCLK_USE_ESP_CLOCK_ROUTER
+            bool "Generate XCLK using ESP clock router"
+            depends on IDF_TARGET_ESP32P4
+            default y
+            help
+                Use the ESP32-P4's dedicated clock router to generate the external clock (XCLK)
+                signal for camera sensors.
+
+                The clock router provides high-precision clock generation directly from the SoC's
+                root clock sources, offering superior frequency stability and accuracy compared
+                to LEDC-based generation.
+
+                For detailed clock tree information, refer to:
+                https://docs.espressif.com/projects/esp-idf/en/latest/esp32p4/api-reference/peripherals/clk_tree.html
+
+                Recommended for: High-performance camera applications requiring precise timing.
+    endmenu
+
+    menu "Camera Motor Control Configuration"
+        rsource "motors/dw9714/Kconfig.dw9714"
+
+        config CAMERA_MOTOR_DEVICE_USED
+            bool
+            default n
+            help
+                Internal configuration flag indicating whether any camera motor driver is enabled.
+
+                This flag is automatically set when any motor driver (such as autofocus motors,
+                zoom motors, or iris control motors) is enabled in the configuration. It is used
+                internally by the build system to include necessary motor control libraries and
+                initialization code.
+
+                Do not modify this setting manually - it is managed automatically based on
+                your motor driver selections.
+
+    endmenu
+
+    menu "Camera SPI Controller Configuration"
+        config CAM_CTLR_SPI_ISR_CACHE_SAFE
+            bool "Enable cache-safe SPI interrupt handling"
+            default y
+            select SPI_SLAVE_ISR_IN_IRAM
+            help
+                Ensure camera controller SPI interrupt service routine (ISR) remains accessible
+                when cache is disabled.
+
+                When enabled, the SPI ISR code is placed in internal RAM (IRAM), allowing it to
+                execute even when external flash cache is temporarily disabled during operations
+                like flash writes, OTA updates, or power management transitions.
+
+                Benefits:
+                - Prevents SPI communication interruptions during cache-disabled periods
+                - Ensures reliable camera data transfer during system operations
+                - Reduces latency in time-critical camera control scenarios
+
+                Trade-offs:
+                - Uses additional IRAM memory
+                - Slightly increases firmware size
+
+                Recommended: Enable for production applications requiring reliable camera operation
+                during all system states.
+
+                Note: This automatically enables SPI_SLAVE_ISR_IN_IRAM for the SPI peripheral.
+
+        config CAM_CTLR_SPI_DISABLE_BACKUP_BUFFER
+            bool "Disable SPI backup buffer"
+            default n
+            help
+                Disable the backup buffer feature for camera controller SPI interface.
+
+                When disabled, the camera controller will not allocate a backup buffer for frame data,
+                which can save memory but may reduce performance since the system cannot buffer incoming
+                frames while processing the current frame.
+
+                Benefits of disabling:
+                - Reduces memory usage
+                - Simplifies buffer management
+
+                Trade-offs:
+                - May cause frame drops during processing
+                - Reduced throughput in high-speed scenarios
+
+                Recommended: Only disable if memory is severely constrained and frame drops are acceptable.
+
+        config CAM_CTLR_SPI_DISABLE_AUTO_DECODE
+            bool "Disable automatic frame decoding"
+            default n
+            help
+                Disable automatic frame decoding for camera controller SPI interface.
+
+                When disabled, the camera controller will not automatically decode incoming frame data
+                (such as removing frame headers, line headers, etc.). The raw frame data will be passed
+                directly to the application without processing.
+
+                Use cases for disabling:
+                - Custom decoding logic implementation required
+                - Working with sensors using non-standard frame formats
+                - Direct access to raw sensor data needed
+                - Debugging frame format issues
+
+                Note: When disabled, the application is responsible for all frame data processing.
+
+        config CAM_CTLR_SPI_DECODE_TASK_STACK_SIZE
+            int "Decode task stack size (bytes)"
+            default 4096
+            depends on !CAM_CTLR_SPI_DISABLE_AUTO_DECODE
+            help
+                Configure the stack size for the camera controller SPI auto decode task.
+
+                This task handles decoding of incoming frame data when automatic decoding is enabled.
+                The stack size should be sufficient to handle frame processing operations without
+                causing stack overflow.
+
+                Considerations:
+                - Larger frames may require more stack space
+                - Complex decoding algorithms need additional stack
+                - Default 4096 bytes suits most standard use cases
+
+                Increase if experiencing stack overflow during frame decoding operations.
+
+        config CAM_CTLR_SPI_DECODE_TASK_PRIORITY
+            int "Decode task priority"
+            default 10
+            depends on !CAM_CTLR_SPI_DISABLE_AUTO_DECODE
+            range 2 25
+            help
+                Set the priority level for the camera controller SPI auto decode task.
+
+                The decode task processes incoming frame data in the background. Priority selection
+                should balance frame processing speed with other system tasks to avoid blocking
+                critical operations.
+
+                Priority guidelines:
+                - Higher values = higher priority (range: 2-25)
+                - 2-5: Low priority, suitable for non-critical applications
+                - 6-15: Medium priority, balanced performance (recommended)
+                - 16-25: High priority, use only for time-critical applications
+
+                Default value of 10 provides good balance for most applications.
+    endmenu
+endmenu

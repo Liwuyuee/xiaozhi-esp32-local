@@ -1,0 +1,85 @@
+menu "Example Configuration"
+
+    choice EXAMPLE_VIDEO_BUFFER_TYPE
+        prompt "Video buffer management"
+        default EXAMPLE_VIDEO_BUFFER_TYPE_USER
+        depends on EXAMPLE_ENABLE_MIPI_CSI_CAM_SENSOR
+        help
+            Select how video buffers are allocated and managed.
+
+            This setting determines who is responsible for video buffer lifecycle
+            management and affects memory usage patterns.
+
+        config EXAMPLE_VIDEO_BUFFER_TYPE_USER
+            bool "User-managed buffers"
+            help
+                Application manages video buffer allocation and free.
+
+                With this option:
+                - Application allocates buffers before starting video capture
+                - Application is responsible for freeing buffers when done
+                - Provides full control over buffer placement and characteristics
+                - Allows optimization for specific memory requirements
+
+                Benefits:
+                - More control over memory allocation (DRAM/PSRAM)
+                - Can optimize buffer count and size for specific use cases
+                - Better integration with custom memory management
+
+                Best for: Applications requiring precise memory control or
+                custom buffer management strategies.
+
+        config EXAMPLE_VIDEO_BUFFER_TYPE_DRIVER
+            bool "Driver-managed buffers"
+            help
+                Video driver automatically handles buffer allocation and free.
+
+                With this option:
+                - Driver allocates buffers during initialization
+                - Driver automatically frees buffers during cleanup
+                - Uses default buffer configuration
+                - Simplified application code
+
+                Benefits:
+                - Simpler application development
+                - Automatic buffer lifecycle management
+                - Reduced risk of memory leaks
+
+                Best for: Simple applications or prototyping where ease
+                of use is more important than fine-grained control.
+    endchoice
+
+    config EXAMPLE_ENABLE_CAM_SENSOR_PIC_VFLIP
+        bool "Enable vertical image flip"
+        default n
+        help
+            Enable vertical (top-to-bottom) flipping of camera images.
+
+            When enabled, the camera sensor will flip images vertically,
+            effectively rotating them 180 degrees around the horizontal axis.
+
+            Use cases:
+            - Correct image orientation when camera is mounted upside down
+            - Match expected image orientation for display or processing
+            - Compensate for mechanical mounting constraints
+
+            Note: This is implemented at the sensor level and does not
+            require additional CPU processing or memory bandwidth.
+
+    config EXAMPLE_ENABLE_CAM_SENSOR_PIC_HFLIP
+        bool "Enable horizontal image flip"
+        default n
+        help
+            Enable horizontal (left-to-right) flipping of camera images.
+
+            When enabled, the camera sensor will flip images horizontally,
+            creating a mirror effect like looking into a mirror.
+
+            Use cases:
+            - Create mirror-like preview for user-facing cameras
+            - Correct image orientation for specific mounting configurations
+            - Match expected image orientation for certain applications
+
+            Note: This is implemented at the sensor level and does not
+            require additional CPU processing or memory bandwidth.
+endmenu

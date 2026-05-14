@@ -1,0 +1,65 @@
+menuconfig CAMERA_OV3660
+    bool "OV3660"
+    default n
+    depends on SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the OV3660 CMOS image sensor.
+
+if CAMERA_OV3660
+    menu "Auto detect OV3660"
+        config CAMERA_OV3660_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default y
+            help
+                When enabled, the OV3660 sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(ov3660_detect) in your application.
+    endmenu
+
+    choice CAMERA_OV3660_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_OV3660_DVP_YUV422_640X480_10FPS
+        help
+            This option allows you to select the default video format for the OV3660 sensor
+            when it is initialized on the DVP interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_OV3660_DVP_RGB565_240X240_24FPS
+            bool "RGB565 240x240 24fps, DVP 8-bit, 20M input"
+            help
+                RGB565 color format at 240x240 resolution with 24fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+        config CAMERA_OV3660_DVP_YUV422_240X240_24FPS
+            bool "YUV422 240x240 24fps, DVP 8-bit, 20M input"
+            help
+                YUV422 color format at 240x240 resolution with 24fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+        config CAMERA_OV3660_DVP_RGB565_640X480_10FPS
+            bool "RGB565 640x480 10fps, DVP 8-bit, 20M input"
+            help
+                RGB565 color format at 640x480 resolution (VGA) with 10fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+        config CAMERA_OV3660_DVP_YUV422_640X480_10FPS
+            bool "YUV422 640x480 10fps, DVP 8-bit, 20M input"
+            help
+                YUV422 color format at 640x480 resolution (VGA) with 10fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+        config CAMERA_OV3660_DVP_JPEG_1280X720_12FPS
+            bool "JPEG 1280x720 12fps, DVP 8-bit, 10M input"
+            help
+                JPEG format at 1280x720 resolution (HD) with 12fps framerate.
+                Requires 8-bit DVP interface and 10MHz input clock.
+    endchoice # CAMERA_OV3660_DVP_DEFAULT_FMT
+
+    config CAMERA_OV3660_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        default 0 if CAMERA_OV3660_DVP_RGB565_240X240_24FPS
+        default 1 if CAMERA_OV3660_DVP_YUV422_240X240_24FPS
+        default 2 if CAMERA_OV3660_DVP_RGB565_640X480_10FPS
+        default 3 if CAMERA_OV3660_DVP_YUV422_640X480_10FPS
+        default 4 if CAMERA_OV3660_DVP_JPEG_1280X720_12FPS
+        help
+            Sets the default configuration for the DVP interface.
+            Use query_support_formats() API to get more format options.
+endif

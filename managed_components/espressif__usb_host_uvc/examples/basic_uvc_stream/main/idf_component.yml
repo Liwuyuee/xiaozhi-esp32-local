@@ -1,0 +1,9 @@
+dependencies:
+  espressif/usb:
+    rules:
+    - if: $ENV_VAR_USB_COMP_MANAGED == yes
+    - if: idf_version >=5.4
+    version: '*'
+  espressif/usb_host_uvc:
+    version: '*'
+  idf: '>=5.0'

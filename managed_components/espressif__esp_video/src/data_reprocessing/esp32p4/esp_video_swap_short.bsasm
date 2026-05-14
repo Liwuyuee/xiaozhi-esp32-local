@@ -1,0 +1,28 @@
+cfg trailing_bytes 8			#If we have an EOF on the input, we still
+								#need to process the 64 bits in M0/M1
+cfg prefetch true				#We expect M0/M1 to be filled
+
+loop:
+	# Note: we start with 64 bits in M0 and M1, so we can immediately start outputting.
+
+	#output word 0
+	set 0..15 16..31,
+	set 16..31 0..15,
+	#as we can only write 32 bits at the same time, we write these and
+	#route the other 32 bits in the next instruction.
+	write 32
+
+	#output word 1
+	set 0..15 48..63,
+	set 16..31 32..47,
+	#as we can only write 32 bits at the same time, we write these and
+	#route the other 32 bits in the next instruction.
+	write 32
+
+	#Note we can read the first half of the next 64 bits into the
+	#input buffer as the load happens at the end of the instruction.
+	read 32
+
+	#Read the 2nd half of the 64 bits in, and loop back to the start.
+	read 32,
+	jmp loop

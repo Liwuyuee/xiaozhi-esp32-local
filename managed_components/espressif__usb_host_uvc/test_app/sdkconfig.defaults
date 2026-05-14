@@ -1,0 +1,11 @@
+# This file was generated using idf.py save-defconfig. It can be edited manually.
+# Espressif IoT Development Framework (ESP-IDF) 6.0.0 Project Minimal Configuration
+#
+CONFIG_IDF_TARGET="esp32p4"
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_SPEED_200M=y
+CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+CONFIG_ESP_TASK_WDT_EN=n
+CONFIG_USB_HOST_CONTROL_TRANSFER_MAX_SIZE=3200
+CONFIG_USB_HOST_HW_BUFFER_BIAS_IN=y
+CONFIG_IDF_EXPERIMENTAL_FEATURES=y

@@ -1,0 +1,14 @@
+dependencies:
+  cmake_utilities: 0.*
+  idf: '>5.0.4,!=5.1.1'
+description: ESP LCD ST7701(RGB & MIPI-DSI)
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: 5f3e921d52c8b454449503bf7750df6fb6aa1764
+  path: components/display/lcd/esp_lcd_st7701
+targets:
+- esp32s3
+- esp32p4
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/display/lcd/esp_lcd_st7701
+version: 1.1.5

@@ -1,0 +1,102 @@
+menuconfig CAMERA_SC035HGS
+    bool "SC035HGS"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED
+    help
+        Enable support for the SC035HGS CMOS image sensor.
+
+if CAMERA_SC035HGS
+    menu "Auto detect SC035HGS"
+        config CAMERA_SC035HGS_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default y
+            depends on SOC_MIPI_CSI_SUPPORTED
+            help
+                When enabled, the SC035HGS sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(sc035hgs_detect) in your application.
+    endmenu
+
+    choice CAMERA_SC035HGS_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_SC035HGS_MIPI_RAW10_640X480_48FPS
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            This option allows you to select the default video format for the SC035HGS sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_SC035HGS_MIPI_RAW10_640X480_48FPS
+            bool "RAW10 640x480 48fps, MIPI 1-lane, 20M input"
+            help
+                RAW10 format at 640x480 resolution (VGA) with 48fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 20MHz input clock.
+        config CAMERA_SC035HGS_MIPI_RAW10_640X480_120FPS
+            bool "RAW10 640x480 120fps, MIPI 1-lane, 24M input"
+            help
+                RAW10 format at 640x480 resolution (VGA) with 120fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+        config CAMERA_SC035HGS_MIPI_RAW8_640X480_50FPS
+            bool "RAW8 640x480 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 format at 640x480 resolution (VGA) with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC035HGS_MIPI_RAW8_640X480_100FPS
+            bool "RAW8 640x480 100fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 format at 640x480 resolution (VGA) with 100fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+    endchoice # CAMERA_SC035HGS_MIPI_DEFAULT_FMT
+
+    config CAMERA_SC035HGS_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default 0 if CAMERA_SC035HGS_MIPI_RAW10_640X480_48FPS
+        default 1 if CAMERA_SC035HGS_MIPI_RAW10_640X480_120FPS
+        default 2 if CAMERA_SC035HGS_MIPI_RAW8_640X480_50FPS
+        default 3 if CAMERA_SC035HGS_MIPI_RAW8_640X480_100FPS
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+
+    choice CAMERA_SC035HGS_IPA_JSON_CONFIGURATION_FILE
+        prompt "IPA Configuration File"
+        default CAMERA_SC035HGS_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+        help
+            Select the Image Processing Algorithm (IPA) JSON configuration file
+            for the SC035HGS sensor.
+
+        config CAMERA_SC035HGS_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+            bool "Use default configuration"
+            help
+                Use the built-in default IPA configuration file:
+                "esp_cam_sensor/sensors/sc035hgs/cfg/sc035hgs_mono_default.json"
+
+                This configuration provides optimized settings for monochrome
+                machine vision applications and is recommended for most use cases.
+
+        config CAMERA_SC035HGS_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+            bool "Use custom configuration"
+            help
+                Use a custom IPA configuration file with your own optimized settings.
+
+                This option allows you to fine-tune sensor parameters for specific
+                lighting conditions, exposure requirements, or application needs.
+
+                You must specify the custom file path in the configuration below.
+    endchoice
+
+    config CAMERA_SC035HGS_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE_PATH
+        string "Custom IPA configuration file path"
+        depends on CAMERA_SC035HGS_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+        help
+            Specify the path to your custom SC035HGS IPA JSON configuration file.
+
+            The path is relative to your project root directory.
+
+            Example: "components/my_camera_config/sc035hgs_custom.json"
+
+            Ensure the file exists and contains valid JSON configuration
+            parameters compatible with the SC035HGS global shutter sensor.
+endif

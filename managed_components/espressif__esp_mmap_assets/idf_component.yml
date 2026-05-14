@@ -1,0 +1,15 @@
+dependencies:
+  cmake_utilities:
+    version: 0.*
+  idf:
+    version: '>=5.0'
+description: Tool for packaging and managing resource files into bin files using memory
+  mapping for efficient asset handling.
+documentation: https://docs.espressif.com/projects/esp-iot-solution/en/latest/display/tools/esp_mmap_assets.html
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: 59a708e5356f7922cda1ed026676477afafd9676
+  path: components/display/tools/esp_mmap_assets
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/display/tools/esp_mmap_assets
+version: 1.4.0

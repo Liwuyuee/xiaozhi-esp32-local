@@ -1,0 +1,297 @@
+menu "Video Data Preprocessing"
+
+menuconfig ESP_VIDEO_ENABLE_SWAP_SHORT
+    bool "Enable 16-bit data swapping"
+    default y
+    select ESP_VIDEO_ENABLE_DATA_PREPROCESSING
+    depends on ESP_VIDEO_ENABLE_MIPI_CSI_VIDEO_DEVICE
+    help
+        Enable swapping of 16-bit (short) data words for MIPI-CSI video streams.
+
+        Example transformation:
+        Memory layout: [0x0100] [0x0302] [0x0504] [0x0706]
+        After swapping: [0x0302] [0x0100] [0x0706] [0x0504]
+
+        Use cases:
+        - Correcting endianness mismatches between sensor and processor
+        - Fixing color channel order in RGB565 format
+        - Resolving data alignment issues with specific sensors
+
+        Required for proper color reproduction with some camera modules.
+
+    if ESP_VIDEO_ENABLE_SWAP_SHORT
+
+    choice ESP_VIDEO_ENABLE_SWAP_SHORT_IMPL
+        prompt "16-bit swap implementation method"
+        default ESP_VIDEO_ENABLE_SWAP_SHORT_RISCV
+        help
+            Select the implementation method for 16-bit data swapping.
+
+            Performance comparison (typical):
+            - RISC-V Assembly: Fastest, uses CPU cores
+            - PIE Extension: Very fast, uses specialized CPU instructions
+            - Hardware Bitscrambler: Slower, offloads CPU but uses peripheral
+
+            Choose based on your performance requirements and available peripherals.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_RISCV
+            bool "RISC-V assembly instructions"
+            help
+                Use optimized RISC-V assembly instructions for data swapping.
+
+                Benefits:
+                - Fastest execution speed
+                - Low latency processing
+                - No peripheral dependencies
+
+                Trade-offs:
+                - Uses CPU cycles
+                - May affect other real-time tasks
+
+                Best for: High-performance applications where speed is critical.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_PIE
+            bool "Processor Instruction Extension (PIE) - Experimental"
+            help
+                Use specialized Processor Instruction Extension for data swapping.
+
+                Benefits:
+                - Very fast execution
+                - Optimized CPU instructions
+                - Lower CPU overhead than assembly
+
+                Limitations:
+                - Experimental feature
+                - May not be available on all chip variants
+
+                Best for: Advanced users requiring optimal CPU efficiency.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER
+            bool "Hardware bitscrambler - Experimental"
+            select ESP_VIDEO_ENABLE_BITSCRAMBLER
+            depends on SOC_BITSCRAMBLER_SUPPORTED
+            help
+                Use dedicated hardware bitscrambler peripheral for data swapping.
+
+                Benefits:
+                - Offloads CPU processing
+                - Allows CPU to handle other tasks
+                - No impact on real-time performance
+
+                Trade-offs:
+                - Slower than CPU-based methods
+                - Requires available peripheral
+                - Experimental feature
+
+                Best for: Applications where CPU resources are constrained.
+    endchoice # ESP_VIDEO_ENABLE_SWAP_SHORT_IMPL
+
+    choice ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_PERIPHERAL
+        prompt "Bitscrambler peripheral selection"
+        default ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_PARL_IO
+        depends on ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER
+        help
+            Select an unused peripheral for bitscrambler operation.
+
+            Performance tiers (fastest to slowest):
+
+            High Performance:
+            - Parallel I/O, LCD_CAM, SPI: Optimized for high-speed data transfer
+            - AES, SHA: Crypto peripherals with good throughput
+
+            Medium Performance:
+            - I2S: Audio peripherals with moderate speed
+
+            Lower Performance:
+            - ADC, I2C, I3C, UHCI, RMT: General purpose, slower operation
+
+            Choose a peripheral not used by other components in your application.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_PARL_IO
+            bool "Parallel I/O (recommended)"
+            help
+                Use Parallel I/O peripheral for bitscrambler operation.
+                Provides highest performance among bitscrambler options.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_LCD_CAM
+            bool "LCD_CAM"
+            help
+                Use LCD_CAM peripheral for bitscrambler operation.
+                High performance, but may conflict with display interfaces.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_GPSPI2
+            bool "GPSPI2"
+            help
+                Use General Purpose SPI2 peripheral for bitscrambler operation.
+                Good performance, ensure SPI2 is not used elsewhere.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_GPSPI3
+            bool "GPSPI3"
+            help
+                Use General Purpose SPI3 peripheral for bitscrambler operation.
+                Good performance, ensure SPI3 is not used elsewhere.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_AES
+            bool "AES"
+            help
+                Use AES crypto peripheral for bitscrambler operation.
+                Good performance, but may conflict with encryption operations.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_SHA
+            bool "SHA"
+            help
+                Use SHA crypto peripheral for bitscrambler operation.
+                Good performance, but may conflict with hash operations.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_ADC
+            bool "ADC"
+            help
+                Use ADC peripheral for bitscrambler operation.
+                Lower performance, but widely available.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_I2S0
+            bool "I2S0"
+            help
+                Use I2S0 peripheral for bitscrambler operation.
+                Moderate performance, ensure I2S0 is not used for audio.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_I2S1
+            bool "I2S1"
+            help
+                Use I2S1 peripheral for bitscrambler operation.
+                Moderate performance, ensure I2S1 is not used for audio.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_I2S2
+            bool "I2S2"
+            help
+                Use I2S2 peripheral for bitscrambler operation.
+                Moderate performance, ensure I2S2 is not used for audio.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_I3C_MST
+            bool "I3C Master"
+            help
+                Use I3C Master peripheral for bitscrambler operation.
+                Lower performance, ensure I3C is not used for sensor communication.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_UHCI
+            bool "UHCI"
+            help
+                Use UHCI peripheral for bitscrambler operation.
+                Lower performance, general purpose option.
+
+        config ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_RMT
+            bool "RMT"
+            help
+                Use RMT peripheral for bitscrambler operation.
+                Lower performance, ensure RMT is not used for IR or LED control.
+    endchoice # ESP_VIDEO_ENABLE_SWAP_SHORT_BITSCRAMBLER_PERIPHERAL
+
+    config ESP_VIDEO_ENABLE_SWAP_SHORT_PERF_LOG
+        bool "Enable performance monitoring"
+        default n
+        help
+            Enable performance logging for 16-bit data swapping operations.
+
+            When enabled, the system will periodically log:
+            - Processing speed (bytes per second)
+            - CPU utilization
+            - Latency measurements
+            - Throughput statistics
+
+            Useful for:
+            - Performance optimization
+            - Debugging performance issues
+            - Comparing different implementation methods
+
+            Note: Logging itself may slightly impact performance.
+
+    config ESP_VIDEO_SWAP_SHORT_PERF_LOG_INTERVAL_US
+        int "Performance log interval (microseconds)"
+        default 1000000
+        depends on ESP_VIDEO_ENABLE_SWAP_SHORT_PERF_LOG
+        help
+            Time interval between performance log outputs in microseconds.
+
+            Recommended values:
+            - 1,000,000 μs (1 second): Standard monitoring (default)
+            - 500,000 μs (0.5 seconds): Frequent monitoring
+            - 5,000,000 μs (5 seconds): Reduced log verbosity
+
+            Shorter intervals provide more detailed monitoring but increase
+            log output volume and may slightly impact performance.
+
+    endif # ESP_VIDEO_ENABLE_SWAP_SHORT
+
+menuconfig ESP_VIDEO_ENABLE_SWAP_BYTE
+    bool "Enable 8-bit data swapping"
+    default y
+    select ESP_VIDEO_ENABLE_DATA_PREPROCESSING
+    depends on SOC_BITSCRAMBLER_SUPPORTED && ESP_VIDEO_ENABLE_DVP_VIDEO_DEVICE
+    help
+        Enable swapping of 8-bit (byte) data for DVP video streams.
+
+        This feature corrects byte order issues that can occur with
+        DVP (Digital Video Port) camera interfaces.
+
+        Example transformation:
+        Memory layout: [0x00] [0x01] [0x02] [0x03]
+        After swapping: [0x01] [0x00] [0x03] [0x02]
+
+        Use cases:
+        - Correcting pixel data order in YUV formats
+        - Fixing RGB component ordering
+        - Resolving endianness issues with DVP sensors
+
+        Required for proper color reproduction with many DVP camera modules.
+        Uses hardware bitscrambler for efficient processing without CPU overhead.
+
+if ESP_VIDEO_ENABLE_SWAP_BYTE
+    choice ESP_VIDEO_ENABLE_SWAP_BYTE_IMPL
+        prompt "8-bit swap implementation method"
+        default ESP_VIDEO_ENABLE_SWAP_BYTE_RISCV
+        help
+            Select the implementation method for 8-bit data swapping.
+
+            Performance comparison (typical):
+            - RISC-V Assembly: Fast, uses CPU cores
+            - Hardware Bitscrambler: Fastest, offloads CPU but uses peripheral
+
+            Choose based on your performance requirements and available peripherals.
+
+        config ESP_VIDEO_ENABLE_SWAP_BYTE_RISCV
+            bool "RISC-V assembly instructions"
+            help
+                Use optimized RISC-V assembly instructions for data swapping.
+
+                Benefits:
+                - Fast execution speed
+                - Low latency processing
+                - No peripheral dependencies
+
+                Trade-offs:
+                - Uses CPU cycles
+                - May affect other real-time tasks
+
+                Best for: High-performance applications where speed is critical.
+
+        config ESP_VIDEO_ENABLE_SWAP_BYTE_BITSCRAMBLER
+            bool "Hardware bitscrambler - Experimental"
+            select ESP_VIDEO_ENABLE_BITSCRAMBLER
+            depends on SOC_BITSCRAMBLER_SUPPORTED
+            help
+                Use dedicated hardware bitscrambler peripheral for data swapping.
+
+                Benefits:
+                - Offloads CPU processing
+                - Allows CPU to handle other tasks
+                - No impact on real-time performance
+
+                Trade-offs:
+                - Faster than CPU-based methods without latency
+                - Requires available peripheral
+                - Experimental feature
+
+                Best for: Applications where CPU resources are constrained.
+    endchoice # ESP_VIDEO_ENABLE_SWAP_BYTE_IMPL
+endif #ESP_VIDEO_ENABLE_SWAP_BYTE
+endmenu

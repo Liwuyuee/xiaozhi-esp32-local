@@ -1,0 +1,228 @@
+menuconfig CAMERA_SC2336
+    bool "SC2336"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED || SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the SC2336 CMOS image sensor.
+
+if CAMERA_SC2336
+    menu "Auto detect SC2336"
+        config CAMERA_SC2336_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default n
+            depends on SOC_LCDCAM_CAM_SUPPORTED
+            help
+                When enabled, the SC2336 sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(sc2336_detect) in your application.
+
+        config CAMERA_SC2336_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default y
+            depends on SOC_MIPI_CSI_SUPPORTED
+            help
+                When enabled, the SC2336 sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(sc2336_detect) in your application.
+    endmenu
+
+    choice CAMERA_SC2336_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_SC2336_MIPI_RAW8_1280X720_30FPS
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            This option allows you to select the default video format for the SC2336 sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_SC2336_MIPI_RAW10_1280X720_30FPS
+            bool "RAW10 1280x720 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1280x720 resolution (HD) with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_1280X720_50FPS
+            bool "RAW10 1280x720 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1280x720 resolution (HD) with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_1280X720_60FPS
+            bool "RAW10 1280x720 60fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1280x720 resolution (HD) with 60fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_1920X1080_25FPS_1_LANE
+            bool "RAW10 1920x1080 25fps, MIPI 1-lane, 24M input"
+            help
+                RAW10 color format at 1920x1080 resolution (FHD) with 25fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_1920X1080_25FPS_2_LANE
+            bool "RAW10 1920x1080 25fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1920x1080 resolution (FHD) with 25fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_1920X1080_30FPS
+            bool "RAW10 1920x1080 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1920x1080 resolution (FHD) with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_800X800_30FPS
+            bool "RAW10 800x800 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 800x800 resolution with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW10_640X480_50FPS
+            bool "RAW10 640x480 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 640x480 resolution (VGA) with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW8_1920X1080_30FPS
+            bool "RAW8 1920x1080 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 1920x1080 resolution (FHD) with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW8_1280X720_30FPS
+            bool "RAW8 1280x720 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 1280x720 resolution (HD) with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW8_800X800_30FPS
+            bool "RAW8 800x800 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 800x800 resolution with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_SC2336_MIPI_RAW8_1024X600_30FPS
+            bool "RAW8 1024x600 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 1024x600 resolution with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+    endchoice # CAMERA_SC2336_MIPI_DEFAULT_FMT
+
+    config CAMERA_SC2336_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default 0 if CAMERA_SC2336_MIPI_RAW10_1280X720_30FPS
+        default 1 if CAMERA_SC2336_MIPI_RAW10_1280X720_50FPS
+        default 2 if CAMERA_SC2336_MIPI_RAW10_1280X720_60FPS
+        default 3 if CAMERA_SC2336_MIPI_RAW10_1920X1080_25FPS_1_LANE
+
+        default 4 if CAMERA_SC2336_MIPI_RAW10_1920X1080_25FPS_2_LANE
+        default 5 if CAMERA_SC2336_MIPI_RAW10_1920X1080_30FPS
+        default 6 if CAMERA_SC2336_MIPI_RAW10_800X800_30FPS
+        default 7 if CAMERA_SC2336_MIPI_RAW10_640X480_50FPS
+
+        default 8 if CAMERA_SC2336_MIPI_RAW8_1920X1080_30FPS
+        default 9 if CAMERA_SC2336_MIPI_RAW8_1280X720_30FPS
+        default 10 if CAMERA_SC2336_MIPI_RAW8_800X800_30FPS
+        default 11 if CAMERA_SC2336_MIPI_RAW8_1024X600_30FPS
+
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+
+    choice CAMERA_SC2336_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_SC2336_DVP_RAW10_1280X720_30FPS
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        help
+            This option allows you to select the default video format for the SC2336 sensor
+            when it is initialized on the DVP interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_SC2336_DVP_RAW10_1280X720_30FPS
+            bool "RAW10 1280x720 30fps, DVP 8 bits, 24M input"
+            help
+                RAW10 color format at HD resolution (1280x720) with 30fps framerate.
+                Requires 8-bit DVP interface and 24MHz input clock.
+    endchoice # CAMERA_SC2336_DVP_DEFAULT_FMT
+
+    config CAMERA_SC2336_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        default 0 if CAMERA_SC2336_DVP_RAW10_1280X720_30FPS
+        help
+            Sets the configuration loaded by default for the DVP interface.
+            Use query_support_formats() API to get more format options.
+
+    config CAMERA_SC2336_ABSOLUTE_GAIN_LIMIT
+            int "Maximum absolute gain limit (x1000)"
+            default 66016
+            range 4000 126016
+            help
+                Set the maximum gain limit that can be applied by upper-level applications.
+
+                Value is gain multiplied by 1000 to avoid floating-point arithmetic:
+                - 4000 = 4x gain (minimum)
+                - 66016 = 66.016x gain (default)
+                - 126016 = 126.016x gain (maximum)
+
+                Lower values reduce noise but may limit low-light performance.
+                Higher values improve low-light sensitivity but increase noise and
+                may cause sensor overheating.
+
+                Recommended values:
+                - 32000 (32x): Good balance for most applications
+                - 66016 (66x): Enhanced low-light performance
+                - 126016 (126x): Maximum sensitivity (use with caution)
+
+    choice CAMERA_SC2336_ABS_GAIN_MAP_PRIORITY
+        prompt "Gain control priority"
+        default CAMERA_SC2336_DIG_GAIN_PRIORITY
+        help
+            Select the gain control strategy to balance image quality and noise.
+
+            The gain mapping affects noise levels and brightness transition smoothness.
+            Analog gain generally produces less noise than digital gain, but digital
+            gain provides smoother brightness transitions.
+
+        config CAMERA_SC2336_ANA_GAIN_PRIORITY
+            bool "Analog gain priority"
+            help
+                Prioritize analog gain over digital gain for noise reduction.
+        config CAMERA_SC2336_DIG_GAIN_PRIORITY
+            bool "Digital gain priority"
+            help
+                Prioritize digital gain over analog gain for smooth transitions.
+    endchoice # CAMERA_SC2336_ABS_GAIN_MAP_PRIORITY
+
+    choice CAMERA_SC2336_IPA_JSON_CONFIGURATION_FILE
+        prompt "IPA Configuration File"
+        default CAMERA_SC2336_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+        help
+            Select the Image Processing Algorithm (IPA) JSON configuration file
+            for the SC2336 sensor.
+
+        config CAMERA_SC2336_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+            bool "Use default configuration"
+            help
+                Use the built-in default IPA configuration file:
+                "esp_cam_sensor/sensors/sc2336/cfg/sc2336_default.json"
+
+                This configuration provides optimized settings for general use cases
+                and is recommended for most applications.
+
+        config CAMERA_SC2336_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+            bool "Use custom configuration"
+            help
+                Use a custom IPA configuration file with your own optimized settings.
+
+                This option allows you to fine-tune sensor parameters for specific
+                lighting conditions, color requirements, or application needs.
+
+                You must specify the custom file path in the configuration below.
+    endchoice
+
+    config CAMERA_SC2336_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE_PATH
+        string "Custom IPA configuration file path"
+        depends on CAMERA_SC2336_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+        help
+            Specify the path to your custom SC2336 IPA JSON configuration file.
+
+            The path is relative to your project root directory.
+
+            Example: "components/my_camera_config/sc2336_custom.json"
+
+            Ensure the file exists and contains valid JSON configuration
+            parameters compatible with the SC2336 sensor.
+endif

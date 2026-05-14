@@ -1,0 +1,153 @@
+menuconfig CAMERA_GC2145
+    bool "GC2145"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED || SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the GC2145 CMOS image sensor.
+
+if CAMERA_GC2145
+    menu "Auto detect GC2145"
+        config CAMERA_GC2145_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default n
+            depends on SOC_LCDCAM_CAM_SUPPORTED
+            help
+                When enabled, the GC2145 sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(gc2145_detect) in your application.
+
+        config CAMERA_GC2145_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default y
+            depends on SOC_MIPI_CSI_SUPPORTED
+            help
+                When enabled, the GC2145 sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(gc2145_detect) in your application.
+    endmenu
+
+    choice CAMERA_GC2145_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_GC2145_MIPI_RGB565_640X480_15FPS
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            This option allows you to select the default video format for the GC2145 sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_GC2145_MIPI_RGB565_1600X1200_7FPS
+            bool "RGB565 1600x1200 7fps, MIPI 1-lane, 24M input"
+            help
+                RGB565 color format at 1600x1200 resolution (UXGA) with 7fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+        config CAMERA_GC2145_MIPI_RGB565_800X600_30FPS
+            bool "RGB565 800x600 30fps, MIPI 1-lane, 24M input"
+            help
+                RGB565 color format at 800x600 resolution (SVGA) with 30fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+        config CAMERA_GC2145_MIPI_RGB565_640X480_15FPS
+            bool "RGB565 640x480 15fps, MIPI 1-lane, 24M input"
+            help
+                RGB565 color format at 640x480 resolution (VGA) with 15fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+    endchoice # CAMERA_GC2145_MIPI_DEFAULT_FMT
+
+    config CAMERA_GC2145_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default 0 if CAMERA_GC2145_MIPI_RGB565_1600X1200_7FPS
+        default 1 if CAMERA_GC2145_MIPI_RGB565_800X600_30FPS
+        default 2 if CAMERA_GC2145_MIPI_RGB565_640X480_15FPS
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+
+    choice CAMERA_GC2145_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_GC2145_DVP_RGB565_640X480_15FPS
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        help
+            Select the default video format to use when the sensor initializes on DVP interface.
+            Format can be changed at runtime when streaming is stopped.
+
+        config CAMERA_GC2145_DVP_RGB565_640X480_15FPS
+            bool "RGB565 640x480 15fps, DVP 8-bit, 20M input"
+            help
+                RGB565 color format at 640x480 resolution (VGA) with 15fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+        config CAMERA_GC2145_DVP_RGB565_1600X1200_13FPS
+            bool "RGB565 1600x1200 13fps, DVP 8-bit, 20M input"
+            help
+                RGB565 color format at 1600x1200 resolution (UXGA) with 13fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+        config CAMERA_GC2145_DVP_RGB565_800X600_20FPS
+            bool "RGB565 800x600 20fps, DVP 8-bit, 20M input"
+            help
+                RGB565 color format at 800x600 resolution (SVGA) with 20fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+    endchoice # CAMERA_GC2145_DVP_DEFAULT_FMT
+
+    config CAMERA_GC2145_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        default 0 if CAMERA_GC2145_DVP_RGB565_640X480_15FPS
+        default 1 if CAMERA_GC2145_DVP_RGB565_1600X1200_13FPS
+        default 2 if CAMERA_GC2145_DVP_RGB565_800X600_20FPS
+        help
+            Sets the default configuration for the DVP interface.
+            Use query_support_formats() API to get more format options.
+
+    choice CAMERA_GC2145_MIPI_DATA_SEQ
+        prompt "MIPI data byte order"
+        default CAMERA_GC2145_MIPI_DATA_SHORT_SWAPPED
+        depends on CAMERA_GC2145_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+        help
+            Configure the byte order for MIPI data stream to correct color or image artifacts.
+
+            When the sensor outputs RGB565 or YUV422 format, each pixel corresponds to two bytes.
+            If the byte order is incorrect, the image may have abnormal colors or edges.
+
+            Enabling this option will enable the byte order swap function in esp-video.
+
+        config CAMERA_GC2145_MIPI_DATA_SHORT_SWAPPED
+            bool "Short byte swap (16-bit endian swap)"
+            help
+                Swap bytes within each 16-bit word (short).
+                Use when colors appear incorrect in RGB565 format.
+        config CAMERA_GC2145_MIPI_DATA_INTERNAL_SWAPPED
+            bool "Internal endian order swap"
+            help
+                Apply internal endian order swapping.
+                Use for specific hardware configurations requiring endian correction.
+        config CAMERA_GC2145_MIPI_DATA_NONE_SWAPPED
+            bool "No byte swapping"
+            help
+                Use original byte order without any swapping.
+                Select if image appears correct without modification.
+    endchoice # CAMERA_SC2336_MIPI_DEFAULT_FMT
+
+    config CAMERA_GC2145_WRITE_REGS_DELAY_ENABLE
+        bool "Enable register write delay"
+        default y if CAMERA_GC2145_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+        default n
+        help
+            Enable delay between consecutive register writes during sensor initialization.
+
+            This delay ensures proper register configuration timing, especially important
+            for MIPI CSI interface where fast consecutive writes may cause initialization issues.
+
+    config CAMERA_GC2145_WRITE_REGS_DELAY_US
+        int "Register write delay (microseconds)"
+        range 100 1000
+        default 300
+        help
+            Set the delay time between each register write during sensor initialization.
+
+            Typical values:
+            - 100-200μs: Minimum delay for most configurations
+            - 300μs: Recommended default for reliable operation
+            - 500-1000μs: For problematic hardware or timing-sensitive setups
+
+            Higher values increase initialization time but improve reliability.
+endif

@@ -1,0 +1,44 @@
+menu "ADC Mic"
+
+    config ADC_MIC_APPLY_GAIN
+        int "Apply Gain"
+        default 3
+        range 0 4
+        help
+            Apply gain to the ADC mic.
+            0: No gain applied
+            1: Left shift 1 bit (2x gain)
+            2: Left shift 2 bits (4x gain)
+            3: Left shift 3 bits (8x gain)
+            4: Left shift 4 bits (16x gain)
+
+    config ADC_MIC_OFFSET
+        int
+        default 2048 if ADC_MIC_APPLY_GAIN = 0
+        default 4095 if ADC_MIC_APPLY_GAIN = 1
+        default 8190 if ADC_MIC_APPLY_GAIN = 2
+        default 16380 if ADC_MIC_APPLY_GAIN = 3
+        default 32760 if ADC_MIC_APPLY_GAIN = 4
+
+    config ADC_MIC_TASK_PRIORITY
+        int "Task Priority"
+        default 1
+        range 0 15
+        help
+            Task priority for the ADC mic worker task.
+
+    config ADC_MIC_TASK_STACK_SIZE
+        int "Task Stack Size"
+        default 3072
+        range 2048 8192
+        help
+            Stack size for the ADC mic worker task.
+
+    config ADC_MIC_TASK_CORE
+        int "Task Core"
+        default -1
+        range -1 1
+        help
+            Core for the ADC mic worker task, -1 means no affinity.
+        depends on SOC_CPU_CORES_NUM > 1 && !FREERTOS_UNICORE
+endmenu

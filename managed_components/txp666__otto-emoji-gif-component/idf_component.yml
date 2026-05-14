@@ -1,0 +1,16 @@
+dependencies:
+  idf:
+    version: '>=5.4.0'
+  lvgl/lvgl: '>=9.0'
+description: Otto机器人GIF表情资源包 - 包含6个动态表情GIF
+license: MIT
+repository: https://github.com/txp666/otto-emoji-gif-component
+targets:
+- esp32s3
+- esp32
+- esp32c3
+- esp32c6
+- esp32h2
+- esp32p4
+url: https://github.com/txp666/otto-emoji-gif-component
+version: 1.0.2

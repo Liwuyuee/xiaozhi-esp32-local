@@ -1,0 +1,109 @@
+menu "Example Configuration"
+
+    if FORMAT_MJPEG_CAM1
+        config EXAMPLE_JPEG_COMPRESSION_QUALITY
+            int "JPEG compression quality (%)"
+            default 80
+            range 1 100
+            help
+                JPEG compression quality percentage (1-100).
+
+                Higher values produce better image quality but larger data streams:
+                - 90-100: Excellent quality, high bandwidth usage
+                - 70-90: Good quality, moderate bandwidth (recommended for UVC)
+                - 50-70: Acceptable quality, lower bandwidth
+                - 1-50: Poor quality, minimal bandwidth
+
+                For UVC streaming, consider the USB bandwidth limitations
+                and host system capabilities when choosing quality level.
+
+                Recommended: 80 for balanced quality and performance.
+    endif
+
+    if FORMAT_H264_CAM1
+        config EXAMPLE_H264_I_PERIOD
+            int "H.264 Intra Frame period (frames)"
+            default 120
+            range 1 120
+            help
+                Number of frames between Intra (I) frames in the H.264 stream.
+
+                I-frames are complete, independently decodable frames that serve
+                as reference points for the video stream.
+
+                Smaller values (10-30):
+                - Better seek performance and error recovery
+                - Higher bandwidth usage
+                - Better for streaming applications with packet loss
+
+                Larger values (60-120):
+                - Better compression efficiency
+                - Lower bandwidth usage
+                - Suitable for stable connections
+
+                For UVC streaming, moderate values (60-120) balance compression
+                efficiency with error recovery capabilities.
+
+        config EXAMPLE_H264_BITRATE
+            int "H.264 Target bitrate (bps)"
+            default 1000000
+            range 25000 2500000
+            help
+                Target bitrate for H.264 encoding in bits per second.
+
+                Bitrate directly affects both quality and bandwidth usage:
+                - 500,000 bps (500 kbps): Low quality, minimal bandwidth
+                - 1,000,000 bps (1 Mbps): Good quality, moderate bandwidth (recommended)
+                - 2,000,000 bps (2 Mbps): High quality, higher bandwidth
+                - 5,000,000+ bps (5+ Mbps): Very high quality, maximum bandwidth
+
+                Consider USB bandwidth limitations:
+                - USB 2.0: ~35 MB/s theoretical, ~20 MB/s practical
+                - USB 3.0+: Much higher bandwidth available
+
+                Choose based on your USB interface and host capabilities.
+
+        config EXAMPLE_H264_MIN_QP
+            int "H.264 Minimum quantization parameter (QP)"
+            default 25
+            range 1 51
+            help
+                Minimum quantization parameter for H.264 encoding.
+
+                Lower QP values produce higher quality (and larger bitrates).
+                This sets the highest quality limit the encoder can achieve.
+
+                Quantization scale:
+                - 1-18: Lossless to very high quality
+                - 19-23: High quality (recommended minimum for streaming)
+                - 24-28: Good quality
+                - 29+: Lower quality
+
+                For UVC streaming, values 18-25 provide good quality while
+                maintaining reasonable bandwidth requirements.
+
+                Must be less than maximum QP value.
+
+        config EXAMPLE_H264_MAX_QP
+            int "H.264 Maximum quantization parameter (QP)"
+            default 26
+            range 1 51
+            help
+                Maximum quantization parameter for H.264 encoding.
+
+                Higher QP values produce lower quality (and smaller bitrates).
+                This sets the lowest quality limit to maintain target bitrate.
+
+                Quantization scale:
+                - 23-28: High to good quality
+                - 29-35: Good to acceptable quality (recommended maximum)
+                - 36-45: Acceptable to poor quality
+                - 46-51: Poor quality
+
+                For UVC streaming, the encoder will adjust QP between minimum
+                and maximum values to maintain the target bitrate while
+                preserving acceptable quality.
+
+                Must be greater than or equal to minimum QP value.
+    endif
+endmenu

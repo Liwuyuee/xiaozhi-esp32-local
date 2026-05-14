@@ -1,0 +1,15 @@
+description: SH1106 ESP-IDF Driver by TNY Robotics
+issues: https://github.com/TNY-Robotics/sh1106-esp-idf/issues
+maintainers:
+- TNY Robotics <contact@furwaz.com>
+repository: https://github.com/TNY-Robotics/sh1106-esp-idf.git
+tags:
+- sh1106
+- display
+- lcd
+- oled
+- i2c
+- driver
+- esp-idf
+url: https://github.com/TNY-Robotics/sh1106-esp-idf
+version: 1.0.0

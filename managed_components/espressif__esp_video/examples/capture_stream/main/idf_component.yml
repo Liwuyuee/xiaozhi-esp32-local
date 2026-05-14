@@ -1,0 +1,4 @@
+dependencies:
+  esp_video:
+    version: '>=0.1.0'
+  idf: '>=5.3'

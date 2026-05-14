@@ -1,0 +1,9 @@
+# Kconfig file for MMAP
+
+menu "mmap file support format"
+
+    config MMAP_FILE_NAME_LENGTH
+        int "Max file name length"
+        default 16
+        range 1 32
+endmenu

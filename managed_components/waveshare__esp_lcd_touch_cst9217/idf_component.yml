@@ -1,0 +1,12 @@
+dependencies:
+  esp_lcd_touch:
+    public: true
+    version: ^1.1.0
+  idf: '>=4.4.2'
+description: ESP LCD Touch CST9217 -The touch controller CST9217 is adapted by waveshare
+repository: git://github.com/waveshareteam/Waveshare-ESP32-components.git
+repository_info:
+  commit_sha: 43e6e696bbf0cf8671a97fcfe02c4c720e4e4d27
+  path: display/touch/esp_lcd_touch_cst9217
+url: https://github.com/waveshareteam/Waveshare-ESP32-components/tree/master/display/touch/esp_lcd_touch_cst9217
+version: 1.0.4

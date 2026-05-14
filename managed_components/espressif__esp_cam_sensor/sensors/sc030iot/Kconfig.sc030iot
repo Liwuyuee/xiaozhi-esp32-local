@@ -1,0 +1,96 @@
+menuconfig CAMERA_SC030IOT
+    bool "SC030IOT"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED || SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the SC030IOT CMOS image sensor.
+
+if CAMERA_SC030IOT
+    menu "Auto detect SC030IOT"
+        config CAMERA_SC030IOT_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default y
+            depends on SOC_LCDCAM_CAM_SUPPORTED
+            help
+                When enabled, the SC030IOT sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(sc030iot_detect) in your application.
+
+        config CAMERA_SC030IOT_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default n
+            depends on SOC_MIPI_CSI_SUPPORTED
+            help
+                When enabled, the SC030IOT sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(sc030iot_detect) in your application.
+    endmenu
+
+    choice CAMERA_SC030IOT_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_SC030IOT_DVP_YUV422_640X480_26FPS
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        help
+            This option allows you to select the default video format for the SC030IOT sensor
+            when it is initialized on the DVP interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_SC030IOT_DVP_YUV422_640X480_26FPS
+            bool "YUV422 640x480 26fps, DVP 8bit 20M input"
+            help
+                Standard color format using YUV422 at 640x480 resolution (VGA)
+                with 26fps framerate. Requires 8-bit DVP interface and 20MHz input.
+        config CAMERA_SC030IOT_DVP_RAW8_640X480_26FPS
+            bool "RAW8 640x480 26fps, DVP 8bit 20M input"
+            help
+                RAW8 format at 640x480 resolution (VGA) with 26fps framerate.
+                Requires 8-bit DVP interface and 20MHz input.
+    endchoice # CAMERA_SC030IOT_DVP_DEFAULT_FMT
+
+    config CAMERA_SC030IOT_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_LCDCAM_CAM_SUPPORTED
+        default 0 if CAMERA_SC030IOT_DVP_YUV422_640X480_26FPS
+        default 1 if CAMERA_SC030IOT_DVP_RAW8_640X480_26FPS
+        help
+            Sets the default configuration for the DVP interface.
+            Use query_support_formats() API to get more format options.
+
+    choice CAMERA_SC030IOT_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_SC030IOT_MIPI_YUV422_640X480_25FPS
+        depends on SOC_MIPI_CSI_SUPPORTED
+        help
+            This option allows you to select the default video format for the SC030IOT sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_SC030IOT_MIPI_YUV422_640X480_25FPS
+            bool "YUV422 640x480 25fps, MIPI 1-lane, 24M input"
+            help
+                Standard color format using YUV422 at 640x480 resolution (VGA)
+                with 25fps framerate. Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+        config CAMERA_SC030IOT_MIPI_YUV422_640X480_50FPS
+            bool "YUV422 640x480 50fps, MIPI 1-lane, 24M input"
+            help
+                Standard color format using YUV422 at 640x480 resolution (VGA)
+                with 50fps framerate. Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+        config CAMERA_SC030IOT_MIPI_RAW8_640X480_60FPS
+            bool "RAW8 640x480 60fps, MIPI 1-lane, 24M input"
+            help
+                RAW8 format at 640x480 resolution (VGA) with 60fps framerate.
+                Requires MIPI CSI-2 1-lane interface with 24MHz input clock.
+    endchoice # CAMERA_SC030IOT_MIPI_DEFAULT_FMT
+
+    config CAMERA_SC030IOT_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        depends on SOC_MIPI_CSI_SUPPORTED
+        default 0 if CAMERA_SC030IOT_MIPI_YUV422_640X480_25FPS
+        default 1 if CAMERA_SC030IOT_MIPI_YUV422_640X480_50FPS
+        default 2 if CAMERA_SC030IOT_MIPI_RAW8_640X480_60FPS
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+endif

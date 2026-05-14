@@ -1,0 +1,337 @@
+menu "Example Configuration"
+    menu "TinyUSB Mass Storage Configuration"
+
+        orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
+
+        choice EXAMPLE_STORAGE_MEDIA
+            prompt "Storage media type"
+            default EXAMPLE_STORAGE_MEDIA_SPIFLASH
+            help
+                Select the storage media that will be exposed to the USB host as a mass storage device.
+
+                The selected storage will appear as a removable drive on the connected computer,
+                allowing direct file access through the USB Mass Storage Class (MSC) interface.
+
+            config EXAMPLE_STORAGE_MEDIA_SPIFLASH
+                bool "SPI Flash memory"
+                help
+                    Use internal SPI flash memory as the storage medium.
+
+                    Benefits:
+                    - Always available on ESP32 devices
+                    - Fast access speeds
+                    - No external hardware required
+
+                    Limitations:
+                    - Limited storage capacity
+                    - Shared with firmware and other data
+
+                    Best for: Small file storage, testing, or embedded applications.
+
+            config EXAMPLE_STORAGE_MEDIA_SDMMC
+                bool "SD/MMC card"
+                depends on IDF_TARGET_ESP32P4
+                help
+                    Use external SD/MMC card as the storage medium.
+
+                    Benefits:
+                    - Large storage capacity (up to several TB)
+                    - Removable media for data transfer
+                    - Standard filesystem support
+
+                    Requirements:
+                    - SD card slot hardware
+                    - Proper GPIO pin configuration
+
+                    Best for: Large file storage, video recording, or data logging.
+        endchoice
+
+        if EXAMPLE_STORAGE_MEDIA_SDMMC
+
+            choice EXAMPLE_SDMMC_BUS_WIDTH
+                prompt "SD/MMC bus width"
+                default EXAMPLE_SDMMC_BUS_WIDTH_1
+                help
+                    Select the data bus width for SD/MMC communication.
+
+                    4-line mode provides higher data transfer speeds but requires
+                    more GPIO pins. 1-line mode uses fewer pins but is slower.
+
+                    Important: Even in 1-line mode, the D3 pin must have a pull-up
+                    resistor connected to prevent the card from entering SPI mode.
+
+                config EXAMPLE_SDMMC_BUS_WIDTH_4
+                    bool "4-line mode (D0-D3)"
+                    help
+                        Use 4 data lines for faster data transfer.
+
+                        Benefits:
+                        - Higher data transfer speeds (up to 4x faster)
+                        - Better performance for large files
+
+                        Requirements:
+                        - 4 additional GPIO pins (D0, D1, D2, D3)
+                        - All data lines must have pull-up resistors
+
+                config EXAMPLE_SDMMC_BUS_WIDTH_1
+                    bool "1-line mode (D0 only)"
+                    help
+                        Use only 1 data line for communication.
+
+                        Benefits:
+                        - Fewer GPIO pins required
+                        - Simpler wiring
+
+                        Limitations:
+                        - Slower data transfer speeds
+                        - D3 pin still requires pull-up resistor
+            endchoice
+
+            if SOC_SDMMC_USE_GPIO_MATRIX
+
+                config EXAMPLE_PIN_CMD
+                    int "CMD pin GPIO number"
+                    range ENV_GPIO_RANGE_MIN ENV_GPIO_IN_RANGE_MAX
+                    default 44 if IDF_TARGET_ESP32P4
+                    default 35
+                    help
+                        GPIO pin for SD card command signal.
+                        This pin carries command and response data between the host and SD card.
+
+                config EXAMPLE_PIN_CLK
+                    int "CLK pin GPIO number"
+                    range ENV_GPIO_RANGE_MIN ENV_GPIO_OUT_RANGE_MAX
+                    default 43 if IDF_TARGET_ESP32P4
+                    default 36
+                    help
+                        GPIO pin for SD card clock signal.
+                        This pin provides the synchronization clock for all SD card operations.
+
+                config EXAMPLE_PIN_D0
+                    int "D0 pin GPIO number"
+                    range ENV_GPIO_RANGE_MIN ENV_GPIO_IN_RANGE_MAX
+                    default 39 if IDF_TARGET_ESP32P4
+                    default 37
+                    help
+                        GPIO pin for SD card data line 0.
+                        This is the primary data line used in both 1-line and 4-line modes.
+
+                if EXAMPLE_SDMMC_BUS_WIDTH_4
+
+                    config EXAMPLE_PIN_D1
+                        int "D1 pin GPIO number"
+                        range ENV_GPIO_RANGE_MIN ENV_GPIO_IN_RANGE_MAX
+                        default 40 if IDF_TARGET_ESP32P4
+                        default 38
+                        help
+                            GPIO pin for SD card data line 1.
+                            Used only in 4-line mode for parallel data transfer.
+
+                    config EXAMPLE_PIN_D2
+                        int "D2 pin GPIO number"
+                        range ENV_GPIO_RANGE_MIN ENV_GPIO_IN_RANGE_MAX
+                        default 41 if IDF_TARGET_ESP32P4
+                        default 33
+                        help
+                            GPIO pin for SD card data line 2.
+                            Used only in 4-line mode for parallel data transfer.
+
+                    config EXAMPLE_PIN_D3
+                        int "D3 pin GPIO number"
+                        range ENV_GPIO_RANGE_MIN ENV_GPIO_IN_RANGE_MAX
+                        default 42 if IDF_TARGET_ESP32P4
+                        default 34
+                        help
+                            GPIO pin for SD card data line 3.
+                            Used in 4-line mode for parallel data transfer.
+                            Must have pull-up resistor even in 1-line mode.
+
+                endif  # EXAMPLE_SDMMC_BUS_WIDTH_4
+
+            endif  # SOC_SDMMC_USE_GPIO_MATRIX
+
+            config EXAMPLE_SD_PWR_CTRL_LDO_INTERNAL_IO
+                depends on SOC_SDMMC_IO_POWER_EXTERNAL
+                bool "SD card powered by internal LDO"
+                default y
+                help
+                    Enable this option if your SD card is powered by an internal LDO regulator.
+
+                    Some ESP32 development boards connect the SD card VDD to an internal
+                    Low-Drop-Out (LDO) regulator output for power management.
+
+                    Check your board schematic to determine if the SD card VDD is connected to:
+                    - Internal LDO output: Enable this option
+                    - External power supply: Disable this option
+
+                    Incorrect setting may cause SD card detection or operation issues.
+
+            config EXAMPLE_SD_PWR_CTRL_LDO_IO_ID
+                depends on SOC_SDMMC_IO_POWER_EXTERNAL && EXAMPLE_SD_PWR_CTRL_LDO_INTERNAL_IO
+                int "Internal LDO ID"
+                default 4 if IDF_TARGET_ESP32P4
+                help
+                    Internal LDO regulator ID that powers the SD card.
+
+                    ESP32-P4 has several GPIO pins in the "SD card IO" power domain
+                    that must be powered externally via one of the LDO outputs.
+
+                    Consult your development board schematic to determine which
+                    internal LDO regulator is connected to the SD card VDD pin.
+
+                    Common values:
+                    - ESP32-P4: LDO4 (default)
+
+                    Incorrect LDO ID may prevent proper SD card power management.
+
+        endif  # EXAMPLE_STORAGE_MEDIA_SDMMC
+
+    endmenu
+
+    menu "Video Storage Configuration"
+        choice EXAMPLE_STORAGE_IMAGE_FORMAT
+            bool "Image/video storage format"
+            default EXAMPLE_FORMAT_MJPEG
+            help
+                Select the format for storing captured images or video data.
+
+                Different formats offer various trade-offs between file size,
+                quality, and processing requirements.
+
+            config EXAMPLE_FORMAT_MJPEG
+                bool "MJPEG (Motion JPEG)"
+                help
+                    Motion JPEG format stores video as a sequence of JPEG images.
+
+                    Benefits:
+                    - Simple format, easy to process
+                    - Each frame is independently decodable
+                    - Good compatibility with image viewers
+                    - Lower CPU encoding requirements
+
+                    Best for: Image sequences, simple video storage, or when
+                    individual frame access is important.
+
+            config EXAMPLE_FORMAT_H264
+                bool "H.264 (Advanced Video Coding)"
+                help
+                    H.264 is a modern video compression standard providing
+                    excellent compression efficiency.
+
+                    Benefits:
+                    - High compression efficiency (smaller file sizes)
+                    - Industry-standard format
+                    - Good streaming compatibility
+                    - Configurable quality and bitrate
+
+                    Best for: Video streaming, long recordings, or when
+                    storage space efficiency is important.
+
+            config EXAMPLE_FORMAT_NON_ENCODE
+                bool "Raw/uncompressed format"
+                help
+                    Store images in raw, uncompressed format without encoding.
+
+                    Benefits:
+                    - No compression artifacts
+                    - Maximum image quality
+                    - No encoding CPU overhead
+                    - Direct sensor output
+
+                    Limitations:
+                    - Very large file sizes
+                    - Limited compatibility with standard viewers
+
+                    Best for: Image analysis, post-processing, or when
+                    maximum quality is required.
+        endchoice
+
+        if EXAMPLE_FORMAT_MJPEG
+            config EXAMPLE_JPEG_COMPRESSION_QUALITY
+                int "JPEG compression quality (%)"
+                default 80
+                range 1 100
+                help
+                    JPEG compression quality percentage (1-100).
+
+                    Higher values produce better image quality but larger file sizes:
+                    - 90-100: Excellent quality, large files
+                    - 70-90: Good quality, moderate file size (recommended)
+                    - 50-70: Acceptable quality, smaller files
+                    - 1-50: Poor quality, very small files
+
+                    Recommended: 80 for a good balance of quality and file size.
+        endif
+
+        if EXAMPLE_FORMAT_H264
+            config EXAMPLE_H264_I_PERIOD
+                int "H.264 Intra Frame period (frames)"
+                default 120
+                range 1 120
+                help
+                    Number of frames between Intra (I) frames in the H.264 stream.
+
+                    I-frames are complete, independently decodable frames that serve
+                    as reference points for the video stream.
+
+                    Smaller values (10-30):
+                    - Better seek performance and error recovery
+                    - Larger file sizes
+                    - Better for streaming applications
+
+                    Larger values (60-120):
+                    - Better compression efficiency
+                    - Smaller file sizes
+                    - Suitable for storage applications
+
+            config EXAMPLE_H264_BITRATE
+                int "H.264 Target bitrate (bps)"
+                default 1000000
+                range 25000 2500000
+                help
+                    Target bitrate for H.264 encoding in bits per second.
+
+                    Higher bitrates produce better quality but larger files:
+                    - 500,000 bps (500 kbps): Low quality, small files
+                    - 1,000,000 bps (1 Mbps): Good quality (recommended)
+                    - 2,000,000 bps (2 Mbps): High quality
+                    - 5,000,000+ bps (5+ Mbps): Very high quality, large files
+
+                    Consider your storage capacity when choosing.
+
+            config EXAMPLE_H264_MIN_QP
+                int "H.264 Minimum quantization parameter (QP)"
+                default 25
+                range 1 51
+                help
+                    Minimum quantization parameter for H.264 encoding.
+
+                    Lower QP values produce higher quality (and larger file sizes).
+                    This sets the highest quality limit the encoder can achieve.
+
+                    Typical values:
+                    - 1-18: Lossless to very high quality
+                    - 19-23: High quality (recommended minimum)
+                    - 24-28: Good quality
+                    - 29+: Lower quality
+
+            config EXAMPLE_H264_MAX_QP
+                int "H.264 Maximum quantization parameter (QP)"
+                default 26
+                range EXAMPLE_H264_MIN_QP 51
+                help
+                    Maximum quantization parameter for H.264 encoding.
+
+                    Higher QP values produce lower quality (and smaller file sizes).
+                    This sets the lowest quality limit to maintain target bitrate.
+
+                    Must be greater than or equal to minimum QP.
+
+                    Typical values:
+                    - 23-28: High to good quality
+                    - 29-35: Good to acceptable quality (recommended maximum)
+                    - 36-45: Acceptable to poor quality
+                    - 46-51: Poor quality
+        endif
+    endmenu
+endmenu

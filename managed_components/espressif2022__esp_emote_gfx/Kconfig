@@ -1,0 +1,13 @@
+menu "ESP Emote Graphics Framework"
+
+    config GFX_FONT_FREETYPE_SUPPORT
+        bool "Enable FreeType font support"
+        default n
+        help
+            Enable support for FreeType fonts (TTF/OTF).
+            This requires the FreeType library to be enabled.
+
+            When enabled, you can use TrueType and OpenType fonts.
+            When disabled, only LVGL C format fonts are supported.
+
+endmenu

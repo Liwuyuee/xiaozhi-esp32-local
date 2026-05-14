@@ -1,0 +1,41 @@
+menuconfig CAMERA_BF3925
+    bool "BF3925"
+    default n
+    depends on SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the BF3925 CMOS image sensor.
+
+if CAMERA_BF3925
+    menu "Auto detect BF3925"
+        config CAMERA_BF3925_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default y
+            help
+                When enabled, the BF3925 sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(bf3925_detect) in your application.
+    endmenu
+
+    choice CAMERA_BF3925_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_BF3925_DVP_YUV422_1600X1200_9FPS
+        help
+            This option allows you to select the default video format for the BF3925 sensor
+            when it is initialized on the DVP interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_BF3925_DVP_YUV422_1600X1200_9FPS
+            bool "YUV422 1600x1200 9fps, DVP 8-bit, 20M input"
+            help
+                YUV422 color format at 1600x1200 resolution (UXGA) with 9fps framerate.
+                Requires 8-bit DVP interface and 20MHz input clock.
+    endchoice # CAMERA_BF3925_DVP_DEFAULT_FMT
+
+    config CAMERA_BF3925_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        default 0 if CAMERA_BF3925_DVP_YUV422_1600X1200_9FPS
+        help
+            Sets the default configuration for the DVP interface.
+            Use query_support_formats() API to get more format options.
+endif

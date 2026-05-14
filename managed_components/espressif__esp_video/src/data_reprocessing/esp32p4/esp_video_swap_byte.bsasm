@@ -1,0 +1,15 @@
+# no fetch for DVP
+cfg trailing_bytes 4
+
+loop:
+    #read 32 bits firstly because no fetch is called
+    read 32
+
+    #as we can only write 32 bits at the same time, we write these and
+    #route the other 32 bits in the next instruction.
+    set 0..7     56..63,
+    set 8..15    48..55,
+    set 16..23   40..47,
+    set 24..31   32..39,
+    write 32,
+    jmp loop

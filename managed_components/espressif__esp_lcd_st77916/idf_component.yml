@@ -1,0 +1,11 @@
+dependencies:
+  cmake_utilities: 0.*
+  idf: '>5.0.4,!=5.1.1'
+description: ESP LCD ST77916(SPI & QSPI)
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: 6a112f4ddfeaf30ec360567ea9260a39e195c385
+  path: components/display/lcd/esp_lcd_st77916
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/display/lcd/esp_lcd_st77916
+version: 1.0.1

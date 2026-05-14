@@ -1,0 +1,71 @@
+menuconfig CAMERA_GC0308
+    bool "GC0308"
+    default n
+    depends on SOC_LCDCAM_CAM_SUPPORTED
+    help
+        Enable support for the GC0308 CMOS image sensor.
+
+if CAMERA_GC0308
+    menu "Auto detect GC0308"
+        config CAMERA_GC0308_AUTO_DETECT_DVP_INTERFACE_SENSOR
+            bool "Detect for DVP interface sensor"
+            default y
+            help
+                When enabled, the GC0308 sensor will be automatically detected
+                and initialized on the DVP interface at startup without requiring
+                manual detection call(gc0308_detect) in your application.
+    endmenu
+
+    choice CAMERA_GC0308_DVP_DEFAULT_FMT
+        prompt "Select default output format for DVP interface"
+        default CAMERA_GC0308_DVP_YUV422_640X480_16FPS
+        help
+            This option allows you to select the default video format for the GC0308 sensor
+            when it is initialized on the DVP interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_GC0308_DVP_YUV422_640X480_16FPS
+            bool "YUV422 640x480 16fps, DVP 8-bit, 20M input"
+            help
+                Standard color format using YUV422 at 640x480 resolution (VGA)
+                with 16fps framerate. Requires 8-bit DVP interface and 20MHz input.
+        config CAMERA_GC0308_DVP_RGB565_640X480_16FPS
+            bool "RGB565 640x480 16fps, DVP 8-bit, 20M input"
+            help
+                Standard color format using RGB565 at 640x480 resolution (VGA)
+                with 16fps framerate. Requires 8-bit DVP interface and 20MHz input.
+        config CAMERA_GC0308_DVP_GRAY_640X480_16FPS
+            bool "Grayscale 640x480 16fps, DVP 8-bit, 20M input"
+            help
+                Grayscale format at 640x480 resolution (VGA) with 16fps framerate.
+                Requires 8-bit DVP interface and 20MHz input.
+        config CAMERA_GC0308_DVP_YUV422_320X240_20FPS
+            bool "YUV422 320x240 20fps, DVP 8-bit, 20M input"
+            help
+                YUV422 color format at 320x240 resolution (QVGA) with 20fps framerate.
+                Requires 8-bit DVP interface and 20MHz input.
+        config CAMERA_GC0308_DVP_GRAY_320X240_20FPS
+            bool "Grayscale 320x240 20fps, DVP 8-bit, 20M input"
+            help
+                Grayscale format at 320x240 resolution (QVGA) with 20fps framerate.
+                Requires 8-bit DVP interface and 20MHz input.
+        config CAMERA_GC0308_DVP_RGB565_320X240_20FPS
+            bool "RGB565 320x240 20fps, DVP 8-bit, 20M input"
+            help
+                Standard color format using RGB565 at 320x240 resolution (QVGA)
+                with 20fps framerate. Requires 8-bit DVP interface and 20MHz input.
+    endchoice # CAMERA_GC0308_DVP_DEFAULT_FMT
+
+    config CAMERA_GC0308_DVP_IF_FORMAT_INDEX_DEFAULT
+        int
+        default 0 if CAMERA_GC0308_DVP_YUV422_640X480_16FPS
+        default 1 if CAMERA_GC0308_DVP_RGB565_640X480_16FPS
+        default 2 if CAMERA_GC0308_DVP_GRAY_640X480_16FPS
+        default 3 if CAMERA_GC0308_DVP_YUV422_320X240_20FPS
+        default 4 if CAMERA_GC0308_DVP_GRAY_320X240_20FPS
+        default 5 if CAMERA_GC0308_DVP_RGB565_320X240_20FPS
+        help
+            Sets the default configuration for the DVP interface.
+            Use query_support_formats() API to get more format options.
+endif

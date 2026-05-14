@@ -1,0 +1,10 @@
+dependencies:
+  idf:
+    version: '>=4.0'
+description: Audio codec device support for Espressif SOC
+repository: git://github.com/espressif/esp-adf.git
+repository_info:
+  commit_sha: 45dc171331a178adfa8212975123c4ede81ea074
+  path: components/esp_codec_dev
+url: https://github.com/espressif/esp-adf/tree/master/components/esp_codec_dev
+version: 1.4.0

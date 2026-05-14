@@ -1,0 +1,11 @@
+dependencies:
+  cmake_utilities: '*'
+  idf: '>=5.0'
+description: Battery capacity estimation based on ADC
+issues: https://github.com/espressif/esp-iot-solution/issues
+repository: git://github.com/espressif/esp-iot-solution.git
+repository_info:
+  commit_sha: 030a332d4470495f46b9414751368a97789ad895
+  path: components/sensors/battery_fuel_gauge/adc_battery_estimation
+url: https://github.com/espressif/esp-iot-solution/tree/master/components/sensors/battery_fuel_gauge/adc_battery_estimation
+version: 0.2.1

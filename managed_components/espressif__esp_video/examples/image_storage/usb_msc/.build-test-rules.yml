@@ -1,0 +1,9 @@
+esp_video/examples/image_storage/usb_msc:
+  enable:
+    - if: IDF_TARGET == "esp32p4"
+      reason: only support on esp32p4
+  depends_components:
+    - esp_video
+    - esp_cam_sensor
+    - esp_sccb_intf
+    

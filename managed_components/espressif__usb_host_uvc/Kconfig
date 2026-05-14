@@ -1,0 +1,16 @@
+menu "USB HOST UVC"
+
+    config UVC_PRINTF_CONFIGURATION_DESCRIPTOR
+        bool "Print UVC Configuration Descriptor"
+        default n
+        help
+            Print UVC Configuration Descriptor to console.
+
+    config UVC_INTERVAL_ARRAY_SIZE
+        int "Size of the interval array in uvc_host_frame_info_t"
+        default 3
+        help
+            This option sets the size of the interval array in the `uvc_host_frame_info_t` structure.
+            Increase this value if you need to support more discrete frame intervals.
+
+endmenu

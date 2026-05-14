@@ -1,0 +1,1066 @@
+menu "Example Video Initialization Configuration"
+
+    choice EXAMPLE_SELECT_TARGET_DEVELOPMENT_BOARD
+        prompt "Select Target Development Board"
+        default EXAMPLE_SELECT_ESP32P4_FUNCTION_EV_BOARD_V1_5
+        help
+            Select your target development board for automatic pin configuration.
+
+            If your board is not listed, select "Custom development board" and
+            configure the GPIO pins manually according to your hardware design.
+
+        config EXAMPLE_SELECT_ESP32P4_FUNCTION_EV_BOARD_V1_4
+            bool "ESP32-P4-Function-EV-Board V1.4"
+            depends on IDF_TARGET_ESP32P4
+            help
+                Official Espressif ESP32-P4 Function Evaluation Board Version 1.4.
+                Includes predefined GPIO configurations for camera and display interfaces.
+
+        config EXAMPLE_SELECT_ESP32P4_FUNCTION_EV_BOARD_V1_5
+            bool "ESP32-P4-Function-EV-Board V1.5"
+            depends on IDF_TARGET_ESP32P4
+            help
+                Official Espressif ESP32-P4 Function Evaluation Board Version 1.5.
+                Includes predefined GPIO configurations for camera and display interfaces.
+
+        config EXAMPLE_SELECT_ESP32P4_EYE
+            bool "ESP32-P4-EYE"
+            depends on IDF_TARGET_ESP32P4
+            help
+                Espressif ESP32-P4-EYE development board optimized for computer vision
+                and AI applications with integrated camera and display.
+
+        config EXAMPLE_SELECT_ESP32S3_EYE
+            bool "ESP32-S3-EYE"
+            depends on IDF_TARGET_ESP32S3
+            help
+                Espressif ESP32-S3-EYE development board with integrated camera sensor
+                and LCD display for AI and computer vision applications.
+
+        config EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+            bool "Customized Development Board"
+            help
+                Use a custom development board requiring manual GPIO configuration.
+                You will need to configure all camera interface pins according to
+                your hardware design.
+    endchoice
+
+    menu "Select and Set Camera Sensor Interface"
+        menuconfig EXAMPLE_ENABLE_MIPI_CSI_CAM_SENSOR
+            bool "MIPI-CSI Camera Sensor"
+            default y
+            depends on ESP_VIDEO_ENABLE_MIPI_CSI_VIDEO_DEVICE
+            help
+                Mobile Industry Processor Interface Camera Serial Interface.
+                High-speed differential serial interface commonly used in
+                mobile devices and professional camera applications.
+
+        if EXAMPLE_ENABLE_MIPI_CSI_CAM_SENSOR
+            config EXAMPLE_MIPI_CSI_SCCB_I2C_PORT
+                int "SCCB(I2C) Port Number"
+                default 0
+                range 0 2 if IDF_TARGET_ESP32P4
+                depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                help
+                    I2C port number for camera sensor control communication.
+
+                    SCCB (Serial Camera Control Bus) is an I2C-compatible
+                    protocol used for camera sensor configuration.
+
+            config EXAMPLE_MIPI_CSI_SCCB_I2C_FREQ
+                int "SCCB(I2C) Frequency (100K-400K Hz)"
+                default 100000
+                range 100000 400000
+                help
+                    I2C clock frequency for camera sensor communication.
+
+                    Recommended values:
+                    - 100000 Hz (100kHz): Standard speed, most compatible
+                    - 400000 Hz (400kHz): Fast mode, reduces initialization time
+
+                    Higher frequencies reduce sensor initialization time but may
+                    cause issues with some sensors or longer cable connections.
+
+            config EXAMPLE_ENABLE_MIPI_CSI_CAM_MOTOR
+                bool "Enable Motor Control"
+                default y
+                depends on ESP_VIDEO_ENABLE_CAMERA_MOTOR_CONTROLLER
+                help
+                    Enable Voice Coil Motor (VCM) control for autofocus functionality.
+
+                    This feature is required for camera modules with autofocus
+                    capabilities. Disable if using fixed-focus lenses.
+
+            if EXAMPLE_ENABLE_MIPI_CSI_CAM_MOTOR
+                config EXAMPLE_MIPI_CSI_CAM_MOTOR_SCCB_I2C_PORT
+                    int "Motor SCCB(I2C) Port Number"
+                    default 0
+                    range 0 2 if IDF_TARGET_ESP32P4
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        I2C port number for autofocus motor control communication.
+
+                        SCCB (Serial Camera Control Bus) is an I2C-compatible
+                        protocol used for camera sensor configuration.
+
+                        Can be the same as camera sensor port if sharing the bus.
+
+                config EXAMPLE_MIPI_CSI_CAM_MOTOR_SCCB_I2C_FREQ
+                    int "Motor SCCB(I2C) Frequency (100K-400K Hz)"
+                    default 100000
+                    range 100000 400000
+                    help
+                        I2C clock frequency for camera sensor communication.
+
+                        Recommended values:
+                        - 100000 Hz (100kHz): Standard speed, most compatible
+                        - 400000 Hz (400kHz): Fast mode, reduces initialization time
+
+                        Higher frequencies reduce sensor initialization time but may
+                        cause issues with some sensors or longer cable connections.
+            endif
+
+            if EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+                config EXAMPLE_MIPI_CSI_SCCB_I2C_SCL_PIN
+                    int "SCCB(I2C) SCL Pin"
+                    default 8
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C clock signal to camera sensor.
+
+                config EXAMPLE_MIPI_CSI_SCCB_I2C_SDA_PIN
+                    int "SCCB(I2C) SDA Pin"
+                    default 7
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C data signal to camera sensor.
+
+                config EXAMPLE_MIPI_CSI_CAM_SENSOR_RESET_PIN
+                    int "Reset Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    help
+                        GPIO pin for camera sensor hardware reset.
+                        Set to -1 if not connected or not required.
+
+                        Active low signal that resets the camera sensor.
+
+                config EXAMPLE_MIPI_CSI_CAM_SENSOR_PWDN_PIN
+                    int "Power Down Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    help
+                        GPIO pin for camera sensor power-down control.
+                        Set to -1 if not connected or not required.
+
+                        Active high signal that puts the sensor in power-down mode.
+
+                config EXAMPLE_MIPI_CSI_XCLK_PIN
+                    int "XCLK Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    help
+                        GPIO pin for camera sensor master clock output.
+                        Set to -1 if clock is provided by other means.
+
+                        This provides the reference clock signal to the camera sensor.
+
+                if EXAMPLE_MIPI_CSI_XCLK_PIN >= 0
+                    config EXAMPLE_MIPI_CSI_XCLK_FREQ
+                        int "XCLK Frequency (Hz)"
+                        default 24000000
+                        help
+                            Master clock frequency for camera sensor.
+
+                            Common values:
+                            - 24000000 Hz (24MHz): Standard for most MIPI sensors
+                            - 20000000 Hz (20MHz): Alternative for some sensors
+
+                            Check your sensor datasheet for supported frequencies.
+                endif
+
+                if EXAMPLE_ENABLE_MIPI_CSI_CAM_MOTOR
+                    config EXAMPLE_MIPI_CSI_CAM_MOTOR_SCCB_I2C_SCL_PIN
+                        int "Motor SCCB(I2C) SCL Pin"
+                        default 8
+                        range 0 54 if IDF_TARGET_ESP32P4
+                        depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                        help
+                            GPIO pin for I2C clock signal to autofocus motor.
+                            Can share the same pin as camera sensor I2C.
+
+                    config EXAMPLE_MIPI_CSI_CAM_MOTOR_SCCB_I2C_SDA_PIN
+                        int "Motor SCCB(I2C) SDA Pin"
+                        default 7
+                        range 0 54 if IDF_TARGET_ESP32P4
+                        depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                        help
+                            GPIO pin for I2C data signal to autofocus motor.
+                            Can share the same pin as camera sensor I2C.
+
+                    config EXAMPLE_MIPI_CSI_CAM_MOTOR_RESET_PIN
+                        int "Motor Reset Pin"
+                        default -1
+                        range -1 54 if IDF_TARGET_ESP32P4
+                        help
+                            GPIO pin for autofocus motor reset control.
+                            Set to -1 if not connected or not required.
+
+                    config EXAMPLE_MIPI_CSI_CAM_MOTOR_PWDN_PIN
+                        int "Motor Power Down Pin"
+                        default -1
+                        range -1 54 if IDF_TARGET_ESP32P4
+                        help
+                            GPIO pin for autofocus motor power-down control.
+                            Set to -1 if not connected or not required.
+
+                    config EXAMPLE_MIPI_CSI_CAM_MOTOR_SIGNAL_PIN
+                        int "Motor Signal Pin"
+                        default -1
+                        range -1 54 if IDF_TARGET_ESP32P4
+                        help
+                            GPIO pin for autofocus motor control signal.
+                            Set to -1 if not connected or motor doesn't require it.
+                endif
+            endif
+        endif
+
+        menuconfig EXAMPLE_ENABLE_DVP_CAM_SENSOR
+            bool "DVP Camera Sensor"
+            default y if IDF_TARGET_ESP32S3
+            default n
+            depends on ESP_VIDEO_ENABLE_DVP_VIDEO_DEVICE
+            help
+                Digital Video Port - parallel interface for camera sensors.
+                Uses multiple GPIO pins for data transmission and control signals.
+                Common in older camera modules and ESP32-CAM boards.
+
+        if EXAMPLE_ENABLE_DVP_CAM_SENSOR
+            config EXAMPLE_DVP_SCCB_I2C_PORT
+                int "SCCB(I2C) Port Number"
+                default 0
+                range 0 1 if IDF_TARGET_ESP32S3
+                range 0 2 if IDF_TARGET_ESP32P4
+                depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                help
+                    I2C port number for camera sensor control communication.
+
+                    SCCB (Serial Camera Control Bus) is an I2C-compatible
+                    protocol used for camera sensor configuration.
+
+            config EXAMPLE_DVP_SCCB_I2C_FREQ
+                int "SCCB(I2C) Frequency (100K-400K Hz)"
+                default 100000
+                range 100000 400000
+                help
+                    I2C clock frequency for camera sensor communication.
+
+                    Recommended values:
+                    - 100000 Hz (100kHz): Standard speed, most compatible
+                    - 400000 Hz (400kHz): Fast mode, reduces initialization time
+
+                    Higher frequencies reduce sensor initialization time but may
+                    cause issues with some sensors or longer cable connections.
+
+            config EXAMPLE_DVP_XCLK_FREQ
+                int "XCLK Frequency (Hz)"
+                default 10000000 if IDF_TARGET_ESP32S3
+                default 20000000
+                help
+                    Master clock frequency for DVP camera sensor.
+
+                    Common values:
+                    - 20000000 Hz (20MHz): Standard for most DVP sensors
+                    - 24000000 Hz (24MHz): Alternative for some sensors
+
+            if EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+                config EXAMPLE_DVP_SCCB_I2C_SCL_PIN
+                    int "SCCB(I2C) SCL Pin"
+                    default 8 if IDF_TARGET_ESP32P4
+                    default 5 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C clock signal to camera sensor.
+
+                config EXAMPLE_DVP_SCCB_I2C_SDA_PIN
+                    int "SCCB(I2C) SDA Pin"
+                    default 7 if IDF_TARGET_ESP32P4
+                    default 4 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C data signal to camera sensor.
+
+                config EXAMPLE_DVP_CAM_SENSOR_RESET_PIN
+                    int "Reset Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera sensor hardware reset.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_DVP_CAM_SENSOR_PWDN_PIN
+                    int "Power Down Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera sensor power-down control.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_DVP_XCLK_PIN
+                    int "XCLK Pin"
+                    default 20 if IDF_TARGET_ESP32P4
+                    default 15 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera sensor master clock output.
+
+                config EXAMPLE_DVP_PCLK_PIN
+                    int "PCLK Pin"
+                    default 4 if IDF_TARGET_ESP32P4
+                    default 13 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for pixel clock signal from camera sensor.
+                        This clock synchronizes pixel data transmission.
+
+                config EXAMPLE_DVP_VSYNC_PIN
+                    int "VSYNC Pin"
+                    default 37 if IDF_TARGET_ESP32P4
+                    default 6 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for vertical synchronization signal.
+                        Indicates the start of a new frame.
+
+                config EXAMPLE_DVP_DE_PIN
+                    int "DE Pin"
+                    default 22 if IDF_TARGET_ESP32P4
+                    default 7 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for data enable signal.
+                        Indicates when pixel data is valid.
+
+                config EXAMPLE_DVP_D0_PIN
+                    int "Data0 Pin"
+                    default 2 if IDF_TARGET_ESP32P4
+                    default 11 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 0 (LSB).
+
+                config EXAMPLE_DVP_D1_PIN
+                    int "Data1 Pin"
+                    default 32 if IDF_TARGET_ESP32P4
+                    default 9 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 1.
+
+                config EXAMPLE_DVP_D2_PIN
+                    int "Data2 Pin"
+                    default 33 if IDF_TARGET_ESP32P4
+                    default 8 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 2.
+
+                config EXAMPLE_DVP_D3_PIN
+                    int "Data3 Pin"
+                    default 23 if IDF_TARGET_ESP32P4
+                    default 10 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 3.
+
+                config EXAMPLE_DVP_D4_PIN
+                    int "Data4 Pin"
+                    default 3 if IDF_TARGET_ESP32P4
+                    default 12 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 4.
+
+                config EXAMPLE_DVP_D5_PIN
+                    int "Data5 Pin"
+                    default 6 if IDF_TARGET_ESP32P4
+                    default 18 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 5.
+
+                config EXAMPLE_DVP_D6_PIN
+                    int "Data6 Pin"
+                    default 5 if IDF_TARGET_ESP32P4
+                    default 17 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 6.
+
+                config EXAMPLE_DVP_D7_PIN
+                    int "Data7 Pin"
+                    default 21 if IDF_TARGET_ESP32P4
+                    default 16 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera data bit 7 (MSB).
+            endif
+        endif
+
+        menuconfig EXAMPLE_ENABLE_SPI_CAM_0_SENSOR
+            bool "SPI Camera Sensor 0"
+            default n if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3
+            default y
+            depends on ESP_VIDEO_ENABLE_SPI_VIDEO_DEVICE
+            help
+                Serial Peripheral Interface for camera sensors 0.
+                Typically used for lower resolution sensors or special applications.
+                Requires fewer GPIO pins than DVP but has lower bandwidth.
+    
+        if EXAMPLE_ENABLE_SPI_CAM_0_SENSOR
+            config EXAMPLE_SPI_CAM_0_SCCB_I2C_PORT
+                int "SCCB(I2C) Port Number"
+                default 0
+                range 0 2 if IDF_TARGET_ESP32P4
+                range 0 1 if IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C5
+                range 0 0
+                depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                help
+                    I2C port number for camera sensor control communication.
+
+                    SCCB (Serial Camera Control Bus) is an I2C-compatible
+                    protocol used for camera sensor configuration.
+
+            config EXAMPLE_SPI_CAM_0_SCCB_I2C_FREQ
+                int "SCCB(I2C) Frequency (100K-400K Hz)"
+                default 100000
+                range 100000 400000
+                help
+                    I2C clock frequency for camera sensor communication.
+
+                    Recommended values:
+                    - 100000 Hz (100kHz): Standard speed, most compatible
+                    - 400000 Hz (400kHz): Fast mode, reduces initialization time
+
+                    Higher frequencies reduce sensor initialization time but may
+                    cause issues with some sensors or longer cable connections.
+
+            config EXAMPLE_SPI_CAM_0_SPI_PORT
+                int "SPI Port Number"
+                default 2 if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3
+                default 1
+                range 0 2 if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3
+                range 0 1
+                help
+                    SPI peripheral number for camera data communication.
+
+            choice EXAMPLE_SPI_CAM_0_XCLK_SOURCE
+                prompt "Select XCLK Source"
+                default EXAMPLE_SPI_CAM_0_XCLK_USE_LEDC if CAMERA_XCLK_USE_LEDC
+                default EXAMPLE_SPI_CAM_0_XCLK_USE_CLOCK_ROUTER if CAMERA_XCLK_USE_ESP_CLOCK_ROUTER
+                help
+                    Select the clock source for generating camera sensor XCLK.
+
+                    - LEDC Timer: Uses LED Controller timer for clock generation
+                    - ESP Clock Router: Uses dedicated clock routing hardware
+
+                config EXAMPLE_SPI_CAM_0_XCLK_USE_LEDC
+                    bool "LEDC Timer"
+                    depends on CAMERA_XCLK_USE_LEDC
+                    help
+                        Use LED Controller timer to generate camera clock.
+                        Provides good accuracy and is available on all ESP32 variants.
+
+                config EXAMPLE_SPI_CAM_0_XCLK_USE_CLOCK_ROUTER
+                    bool "ESP Clock Router"
+                    depends on CAMERA_XCLK_USE_ESP_CLOCK_ROUTER
+                    help
+                        Use dedicated clock routing hardware for camera clock.
+                        Provides better performance and lower jitter when available.
+            endchoice
+
+            config EXAMPLE_SPI_CAM_0_XCLK_FREQ
+                int "XCLK Frequency (Hz)"
+                default 24000000 if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32C5
+                default 20000000
+                help
+                    Master clock frequency for SPI camera sensor.
+
+            if EXAMPLE_SPI_CAM_0_XCLK_USE_LEDC
+                config EXAMPLE_SPI_CAM_0_XCLK_TIMER
+                    int "XCLK LEDC Timer Number"
+                    default 0
+                    range 0 3
+                    help
+                        LEDC timer number for camera clock generation.
+
+                config EXAMPLE_SPI_CAM_0_XCLK_TIMER_CHANNEL
+                    int "XCLK LEDC Timer Channel"
+                    default 0
+                    range 0 7 if IDF_TARGET_ESP32P4 || IDF_TARGET_ESP32S3
+                    range 0 5
+                    help
+                        LEDC timer channel for camera clock output.
+            endif
+
+            if EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+                config EXAMPLE_SPI_CAM_0_SCCB_I2C_SCL_PIN
+                    int "SCCB(I2C) SCL Pin"
+                    default 8 if IDF_TARGET_ESP32P4
+                    default 5
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    range 0 21 if IDF_TARGET_ESP32C3
+                    range 0 30 if IDF_TARGET_ESP32C6
+                    range 0 29 if IDF_TARGET_ESP32C61
+                    range 0 28 if IDF_TARGET_ESP32C5
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C clock signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_0_SCCB_I2C_SDA_PIN
+                    int "SCCB(I2C) SDA Pin"
+                    default 7 if IDF_TARGET_ESP32P4
+                    default 4
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    range 0 21 if IDF_TARGET_ESP32C3
+                    range 0 30 if IDF_TARGET_ESP32C6
+                    range 0 29 if IDF_TARGET_ESP32C61
+                    range 0 28 if IDF_TARGET_ESP32C5
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C data signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_0_SENSOR_RESET_PIN
+                    int "Reset Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    range -1 21 if IDF_TARGET_ESP32C3
+                    range -1 30 if IDF_TARGET_ESP32C6
+                    range -1 29 if IDF_TARGET_ESP32C61
+                    range -1 28 if IDF_TARGET_ESP32C5
+                    help
+                        GPIO pin for camera sensor hardware reset.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_SPI_CAM_0_SENSOR_PWDN_PIN
+                    int "Power Down Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    range -1 21 if IDF_TARGET_ESP32C3
+                    range -1 30 if IDF_TARGET_ESP32C6
+                    range -1 29 if IDF_TARGET_ESP32C61
+                    range -1 28 if IDF_TARGET_ESP32C5
+                    help
+                        GPIO pin for camera sensor power-down control.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_SPI_CAM_0_XCLK_PIN
+                    int "XCLK Output Pin"
+                    default 20 if IDF_TARGET_ESP32P4
+                    default 15 if IDF_TARGET_ESP32S3
+                    default 8 if IDF_TARGET_ESP32C3
+                    default 0 if IDF_TARGET_ESP32C6 || IDF_TARGET_ESP32C61 || IDF_TARGET_ESP32C5
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    range -1 21 if IDF_TARGET_ESP32C3
+                    range -1 30 if IDF_TARGET_ESP32C6
+                    range -1 29 if IDF_TARGET_ESP32C61
+                    range -1 28 if IDF_TARGET_ESP32C5
+                    help
+                        GPIO pin for camera sensor master clock output.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_SPI_CAM_0_CS_PIN
+                    int "Chip Select Pin"
+                    default 37 if IDF_TARGET_ESP32P4
+                    default 6 if IDF_TARGET_ESP32S3
+                    default 10 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32C5
+                    default 1 if IDF_TARGET_ESP32C6
+                    default 8 if IDF_TARGET_ESP32C61
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    range 0 21 if IDF_TARGET_ESP32C3
+                    range 0 30 if IDF_TARGET_ESP32C6
+                    range 0 29 if IDF_TARGET_ESP32C61
+                    range 0 28 if IDF_TARGET_ESP32C5
+                    help
+                        GPIO pin for SPI chip select signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_0_SCLK_PIN
+                    int "Clock Pin"
+                    default 4 if IDF_TARGET_ESP32P4
+                    default 13 if IDF_TARGET_ESP32S3
+                    default 6
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    range 0 21 if IDF_TARGET_ESP32C3
+                    range 0 30 if IDF_TARGET_ESP32C6
+                    range 0 29 if IDF_TARGET_ESP32C61
+                    range 0 28 if IDF_TARGET_ESP32C5
+                    help
+                        GPIO pin for SPI clock signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_0_DATA0_IO_PIN
+                    int "Data0 I/O Pin"
+                    default 21 if IDF_TARGET_ESP32P4
+                    default 16 if IDF_TARGET_ESP32S3
+                    default 7
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    range 0 21 if IDF_TARGET_ESP32C3
+                    range 0 30 if IDF_TARGET_ESP32C6
+                    range 0 29 if IDF_TARGET_ESP32C61
+                    range 0 28 if IDF_TARGET_ESP32C5
+                    help
+                        GPIO pin for SPI data input/output to camera sensor.
+            endif
+        endif
+
+        menuconfig EXAMPLE_ENABLE_USB_UVC_CAM_SENSOR
+            bool "USB-UVC"
+            depends on ESP_VIDEO_ENABLE_USB_UVC_VIDEO_DEVICE
+            help
+                USB Video Class (UVC) interface for standard USB cameras.
+
+                UVC is a standardized USB protocol that enables plug-and-play
+                connectivity with a wide range of USB camera devices without
+                requiring custom drivers.
+
+                Features:
+                - Standard USB interface with no custom drivers needed
+                - Support for multiple resolutions and formats
+                - Hot-plug capability for dynamic camera connection/disconnection
+                - Power and data transmission over single USB cable
+                - Compatible with most commercial USB webcams and industrial cameras
+
+                Ideal for applications requiring external camera connectivity,
+                webcam integration, or when GPIO pins are limited.
+
+        if EXAMPLE_ENABLE_USB_UVC_CAM_SENSOR
+            config EXAMPLE_USB_UVC_DEVICES_NUM
+                int "USB UVC Device Number"
+                default 1
+                range 1 10
+                help
+                    Maximum number of USB UVC (Video Class) devices that can be 
+                    simultaneously connected and managed by the system.
+
+                    This setting determines:
+                    - How many USB cameras can be used concurrently
+                    - Memory allocation for device management structures
+                    - USB host controller resource usage
+
+                    Values:
+                    - 1: Single camera operation (default, lowest resource usage)
+                    - 2-10: Multi-camera setups (requires more RAM and USB bandwidth)
+
+                    Note: Each additional device increases memory consumption.
+                    Ensure adequate USB power supply and bandwidth for multiple cameras.
+
+            config EXAMPLE_USB_UVC_TASK_STACK_SIZE
+                int "USB UVC Task Stack Size"
+                default 4096
+                help
+                    Stack size (in bytes) for the USB UVC task that handles camera operations.
+
+                    This task is responsible for:
+                    - USB video data processing
+                    - Frame buffer management
+                    - Camera control command handling
+
+                    Recommended values:
+                    - 4096 bytes: Default, suitable for most applications
+                    - 6144 bytes: For high-resolution video or complex processing
+                    - 8192 bytes: For multiple cameras or intensive operations
+
+                    Increase if you encounter stack overflow errors or use deep call stacks.
+
+            config EXAMPLE_USB_UVC_TASK_PRIORITY
+                int "USB UVC Task Priority"
+                default 10
+                range 2 15
+                help
+                    Task priority for the USB UVC task that handles video data processing (higher numbers = higher priority).
+
+                    This controls the scheduling priority of the USB UVC video task relative 
+                    to other application tasks. Higher priority ensures more responsive video 
+                    processing and smoother frame handling.
+
+                    Priority guidelines:
+                    - 10: Default, balanced priority for most video applications
+                    - 11-12: Higher priority for low-latency video streaming
+                    - 13-15: Maximum priority for real-time video processing
+                    - 6-9: Lower priority if video is not time-critical
+
+                    Note: Should typically be lower than USB library task priority (11) to ensure
+                    proper USB stack operation. Very high priorities may impact other system tasks.
+
+            config EXAMPLE_USB_UVC_TASK_AFFINITY
+                int "USB UVC Task Affinity"
+                default -1
+                range -1 0 if FREERTOS_UNICORE
+                range -1 1 if !FREERTOS_UNICORE
+                help
+                    CPU core affinity for the USB UVC task execution.
+
+                    This determines which CPU core will execute the USB UVC task:
+                    - -1: No affinity (FreeRTOS scheduler chooses automatically)
+                    - 0: Pin task to CPU core 0 (Protocol core)
+                    - 1: Pin task to CPU core 1 (Application core, dual-core only)
+
+                    Recommendations:
+                    - Use -1 for automatic load balancing (default)
+                    - Use 0 to isolate USB processing from application tasks
+                    - Use 1 to keep USB processing with main application
+
+                    Note: Core 1 is only available on dual-core ESP32 variants.
+
+            config EXAMPLE_USB_LIB_TASK_STACK_SIZE
+                int "USB Lib Task Stack Size"
+                default 4096
+                help
+                    Stack size (in bytes) for the USB library task that manages USB host operations.
+
+                    This low-level task handles:
+                    - USB host controller operations
+                    - Device enumeration and management
+                    - USB protocol stack processing
+                    - Interrupt and event handling
+
+                    Recommended values:
+                    - 4096 bytes: Default, suitable for standard USB operations
+                    - 6144 bytes: For multiple USB devices or complex configurations
+                    - 8192 bytes: For heavy USB traffic or debugging scenarios
+
+                    This is a critical system task - insufficient stack may cause USB failures.
+
+            config EXAMPLE_USB_LIB_TASK_PRIORITY
+                int "USB Lib Task Priority"
+                default 11
+                range 2 15
+                help
+                    Task priority for the USB library task (higher numbers = higher priority).
+
+                    This controls the scheduling priority of the USB host library task relative 
+                    to other system tasks. Higher priority ensures more responsive USB operations.
+
+                    Priority guidelines:
+                    - 11: Default, balanced priority for most applications
+                    - 12-13: Higher priority for time-sensitive USB operations
+                    - 14-15: Maximum priority for critical real-time USB requirements
+                    - 8-10: Lower priority if USB is not performance-critical
+
+                    Note: Should typically be higher than USB UVC task priority (10) to ensure
+                    proper USB stack operation. Very high priorities may impact other system tasks.
+
+            config EXAMPLE_USB_LIB_TASK_AFFINITY
+                int "USB Lib Affinity"
+                default -1
+                range -1 0 if FREERTOS_UNICORE
+                range -1 1 if !FREERTOS_UNICORE
+                help
+                    CPU core affinity for the USB library task execution.
+
+                    This determines which CPU core will execute the critical USB host library task:
+                    - -1: No affinity (FreeRTOS scheduler chooses automatically)
+                    - 0: Pin task to CPU core 0 (Protocol core)
+                    - 1: Pin task to CPU core 1 (Application core, dual-core only)
+
+                    Recommendations:
+                    - Use -1 for automatic load balancing (default)
+                    - Use 0 for dedicated USB processing on protocol core
+                    - Use 1 if main application runs on core 0
+
+                    Note: USB lib task handles time-critical USB operations, so core affinity
+                    can impact performance. Core 1 is only available on dual-core ESP32 variants.
+        endif
+
+        menuconfig EXAMPLE_ENABLE_SPI_CAM_1_SENSOR
+            bool "SPI Camera Sensor 1"
+            default n
+            depends on ESP_VIDEO_ENABLE_THE_SECOND_SPI_VIDEO_DEVICE
+            help
+                Serial Peripheral Interface for camera sensors 1.
+                Typically used for lower resolution sensors or special applications.
+                Requires fewer GPIO pins than DVP but has lower bandwidth.
+    
+        if EXAMPLE_ENABLE_SPI_CAM_1_SENSOR
+            config EXAMPLE_SPI_CAM_1_SCCB_I2C_PORT
+                int "SCCB(I2C) Port Number"
+                default 1
+                range 0 2 if IDF_TARGET_ESP32P4
+                range 0 1 if IDF_TARGET_ESP32S3
+                depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                help
+                    I2C port number for camera sensor control communication.
+
+                    SCCB (Serial Camera Control Bus) is an I2C-compatible
+                    protocol used for camera sensor configuration.
+
+            config EXAMPLE_SPI_CAM_1_SCCB_I2C_FREQ
+                int "SCCB(I2C) Frequency (100K-400K Hz)"
+                default 100000
+                range 100000 400000
+                help
+                    I2C clock frequency for camera sensor communication.
+
+                    Recommended values:
+                    - 100000 Hz (100kHz): Standard speed, most compatible
+                    - 400000 Hz (400kHz): Fast mode, reduces initialization time
+
+                    Higher frequencies reduce sensor initialization time but may
+                    cause issues with some sensors or longer cable connections.
+
+            config EXAMPLE_SPI_CAM_1_SPI_PORT
+                int "SPI Port Number"
+                default 1
+                range 0 2
+                help
+                    SPI peripheral number for camera data communication.
+
+            choice EXAMPLE_SPI_CAM_1_XCLK_SOURCE
+                prompt "Select XCLK Source"
+                default EXAMPLE_SPI_CAM_1_XCLK_USE_LEDC
+                help
+                    Select the clock source for generating camera sensor XCLK.
+
+                    - LEDC Timer: Uses LED Controller timer for clock generation
+                    - ESP Clock Router: Uses dedicated clock routing hardware
+
+                config EXAMPLE_SPI_CAM_1_XCLK_USE_LEDC
+                    bool "LEDC Timer"
+                    depends on CAMERA_XCLK_USE_LEDC
+                    help
+                        Use LED Controller timer to generate camera clock.
+                        Provides good accuracy and is available on all ESP32 variants.
+
+                config EXAMPLE_SPI_CAM_1_XCLK_USE_CLOCK_ROUTER
+                    bool "ESP Clock Router"
+                    depends on CAMERA_XCLK_USE_ESP_CLOCK_ROUTER
+                    help
+                        Use dedicated clock routing hardware for camera clock.
+                        Provides better performance and lower jitter when available.
+            endchoice
+
+            config EXAMPLE_SPI_CAM_1_XCLK_FREQ
+                int "XCLK Frequency (Hz)"
+                default 24000000 if EXAMPLE_SPI_CAM_1_XCLK_USE_CLOCK_ROUTER
+                default 20000000 if EXAMPLE_SPI_CAM_1_XCLK_USE_LEDC
+                help
+                    Master clock frequency for SPI camera sensor.
+
+            if EXAMPLE_SPI_CAM_1_XCLK_USE_LEDC
+                config EXAMPLE_SPI_CAM_1_XCLK_TIMER
+                    int "XCLK LEDC Timer Number"
+                    default 1
+                    range 0 3
+                    help
+                        LEDC timer number for camera clock generation.
+
+                config EXAMPLE_SPI_CAM_1_XCLK_TIMER_CHANNEL
+                    int "XCLK LEDC Timer Channel"
+                    default 1
+                    range 0 7
+                    help
+                        LEDC timer channel for camera clock output.
+            endif
+
+            if EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+                config EXAMPLE_SPI_CAM_1_SCCB_I2C_SCL_PIN
+                    int "SCCB(I2C) SCL Pin"
+                    default 5 if IDF_TARGET_ESP32P4
+                    default 1 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C clock signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_1_SCCB_I2C_SDA_PIN
+                    int "SCCB(I2C) SDA Pin"
+                    default 6 if IDF_TARGET_ESP32P4
+                    default 2 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    depends on !EXAMPLE_SCCB_I2C_INIT_BY_APP
+                    help
+                        GPIO pin for I2C data signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_1_SENSOR_RESET_PIN
+                    int "Reset Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera sensor hardware reset.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_SPI_CAM_1_SENSOR_PWDN_PIN
+                    int "Power Down Pin"
+                    default -1
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera sensor power-down control.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_SPI_CAM_1_XCLK_PIN
+                    int "XCLK Output Pin"
+                    default 23 if IDF_TARGET_ESP32P4
+                    default 39 if IDF_TARGET_ESP32S3
+                    range -1 54 if IDF_TARGET_ESP32P4
+                    range -1 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for camera sensor master clock output.
+                        Set to -1 if not connected or not required.
+
+                config EXAMPLE_SPI_CAM_1_CS_PIN
+                    int "Chip Select Pin"
+                    default 38 if IDF_TARGET_ESP32P4
+                    default 42 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for SPI chip select signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_1_SCLK_PIN
+                    int "Clock Pin"
+                    default 22 if IDF_TARGET_ESP32P4
+                    default 43 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for SPI clock signal to camera sensor.
+
+                config EXAMPLE_SPI_CAM_1_DATA0_IO_PIN
+                    int "Data0 I/O Pin"
+                    default 3 if IDF_TARGET_ESP32P4
+                    default 40 if IDF_TARGET_ESP32S3
+                    range 0 54 if IDF_TARGET_ESP32P4
+                    range 0 48 if IDF_TARGET_ESP32S3
+                    help
+                        GPIO pin for SPI data input/output to camera sensor.
+            endif
+        endif
+    endmenu
+
+    menuconfig EXAMPLE_SCCB_I2C_INIT_BY_APP
+        bool "Use Pre-initialized SCCB(I2C) Bus for All Camera Sensors And Motors"
+        default n
+        help
+            Enable this option to use an I2C bus that has been explicitly
+            initialized by your application before camera initialization.
+            All camera sensors including the motors use this I2C bus on the
+            specified port.
+
+            Benefits:
+            - Allows sharing I2C bus with other devices
+            - Provides application control over I2C timing
+            - Enables custom I2C configuration
+
+            When enabled, you must call i2c_master_bus_init() before
+            initializing the camera sensor.
+
+    if EXAMPLE_SCCB_I2C_INIT_BY_APP
+        config EXAMPLE_SCCB_I2C_PORT_INIT_BY_APP
+            int "SCCB(I2C) Port Number"
+            default 0
+            range 0 2 if IDF_TARGET_ESP32P4
+            range 0 1 if IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32C5
+            range 0 0
+            help
+                I2C port number for all camera sensors and motors.
+
+        config EXAMPLE_SCCB_I2C_SCL_PIN_INIT_BY_APP
+            int "SCCB(I2C) SCL Pin"
+            default 8 if IDF_TARGET_ESP32P4
+            default 5
+            range 0 54 if IDF_TARGET_ESP32P4
+            range 0 48 if IDF_TARGET_ESP32S3
+            range 0 21 if IDF_TARGET_ESP32C3
+            range 0 30 if IDF_TARGET_ESP32C6
+            range 0 29 if IDF_TARGET_ESP32C61
+            range 0 28 if IDF_TARGET_ESP32C5
+            depends on EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+            help
+                GPIO pin for I2C clock signal to all camera sensors and motors.
+
+        config EXAMPLE_SCCB_I2C_SDA_PIN_INIT_BY_APP
+            int "SCCB(I2C) SDA Pin"
+            default 7 if IDF_TARGET_ESP32P4
+            default 4
+            range 0 54 if IDF_TARGET_ESP32P4
+            range 0 48 if IDF_TARGET_ESP32S3
+            range 0 21 if IDF_TARGET_ESP32C3
+            range 0 30 if IDF_TARGET_ESP32C6
+            range 0 29 if IDF_TARGET_ESP32C61
+            range 0 28 if IDF_TARGET_ESP32C5
+            depends on EXAMPLE_SELECT_CUSTOMIZED_DEV_BOARD
+            help
+                GPIO pin for I2C data signal to all camera sensors and motors.
+    endif
+
+    choice EXAMPLE_SELECT_JPEG_ENCODER
+        prompt "Select JPEG Encoder Type"
+        default EXAMPLE_SELECT_JPEG_HW_DRIVER if IDF_TARGET_ESP32P4
+        default EXAMPLE_SELECT_JPEG_ESP_NEW_JPEG if IDF_TARGET_ESP32S3
+        help
+            Select the JPEG encoder implementation for image compression.
+
+            - Hardware JPEG: Uses dedicated JPEG encoding hardware (faster, lower CPU usage)
+            - Software JPEG: Uses CPU-based JPEG encoding (compatible with all targets)
+
+        config EXAMPLE_SELECT_JPEG_HW_DRIVER
+            bool "Hardware JPEG Encoder"
+            depends on SOC_JPEG_CODEC_SUPPORTED
+            help
+                Use dedicated hardware JPEG encoder for image compression.
+
+                Advantages:
+                - Faster encoding speed
+                - Lower CPU usage
+                - Better power efficiency
+                - Hardware-accelerated compression
+
+                Available on ESP32-P4 and other chips with JPEG codec support.
+
+        config EXAMPLE_SELECT_JPEG_ESP_NEW_JPEG
+            bool "Software JPEG Encoder (esp_new_jpeg)"
+            help
+                Use software-based JPEG encoder for image compression.
+
+                Advantages:
+                - Compatible with all ESP32 variants
+                - No hardware dependencies
+                - Flexible compression parameters
+
+                Trade-offs:
+                - Higher CPU usage
+                - Slower encoding speed
+                - Higher power consumption
+    endchoice
+endmenu

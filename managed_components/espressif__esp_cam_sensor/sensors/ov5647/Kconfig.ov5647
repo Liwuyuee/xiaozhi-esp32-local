@@ -1,0 +1,143 @@
+menuconfig CAMERA_OV5647
+    bool "OV5647"
+    default n
+    depends on SOC_MIPI_CSI_SUPPORTED
+    help
+        Enable support for the OV5647 CMOS image sensor.
+
+if CAMERA_OV5647
+    menu "Auto detect OV5647"
+        config CAMERA_OV5647_AUTO_DETECT_MIPI_INTERFACE_SENSOR
+            bool "Detect for MIPI CSI interface sensor"
+            default y
+            help
+                When enabled, the OV5647 sensor will be automatically detected
+                and initialized on the MIPI CSI interface at startup without requiring
+                manual detection call(ov5647_detect) in your application.
+    endmenu
+
+    choice CAMERA_OV5647_MIPI_DEFAULT_FMT
+        prompt "Select default output format for MIPI CSI interface"
+        default CAMERA_OV5647_MIPI_RAW8_800X800_50FPS
+        help
+            This option allows you to select the default video format for the OV5647 sensor
+            when it is initialized on the MIPI CSI interface. The selected format will be used
+            when the sensor is detected and initialized, and can be changed later when the
+            sensor is in stream off state.
+
+        config CAMERA_OV5647_MIPI_RAW8_800X1280_50FPS
+            bool "RAW8 800x1280 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 800x1280 resolution with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OV5647_MIPI_RAW8_800X640_50FPS
+            bool "RAW8 800x640 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 800x640 resolution (WVGA) with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OV5647_MIPI_RAW8_800X800_50FPS
+            bool "RAW8 800x800 50fps, MIPI 2-lane, 24M input"
+            help
+                RAW8 color format at 800x800 resolution with 50fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OV5647_MIPI_RAW10_1920X1080_30FPS
+            bool "RAW10 1920x1080 30fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1920x1080 resolution (FHD) with 30fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+        config CAMERA_OV5647_MIPI_RAW10_1280X960_BINNING_45FPS
+            bool "RAW10 1280x960 Binning 45fps, MIPI 2-lane, 24M input"
+            help
+                RAW10 color format at 1280x960 resolution (SXGA) with 45fps framerate.
+                Requires MIPI CSI-2 2-lane interface with 24MHz input clock.
+    endchoice # CAMERA_OV5647_MIPI_DEFAULT_FMT
+
+    config CAMERA_OV5647_MIPI_IF_FORMAT_INDEX_DEFAULT
+        int
+        default 0 if CAMERA_OV5647_MIPI_RAW8_800X1280_50FPS
+        default 1 if CAMERA_OV5647_MIPI_RAW8_800X640_50FPS
+        default 2 if CAMERA_OV5647_MIPI_RAW8_800X800_50FPS
+        default 3 if CAMERA_OV5647_MIPI_RAW10_1920X1080_30FPS
+        default 4 if CAMERA_OV5647_MIPI_RAW10_1280X960_BINNING_45FPS
+        help
+            Sets the default configuration for the MIPI CSI interface.
+            Use query_support_formats() API to get more format options.
+
+    config CAMERA_OV5647_CSI_LINESYNC_ENABLE
+        bool "Enable CSI line synchronization"
+        default y
+        help
+            Enable MIPI CSI-2 line synchronization by sending short packets for each line.
+
+            When enabled, the sensor will send line start/end short packets that help
+            the CSI receiver synchronize with each video line. This improves timing
+            accuracy and reduces the chance of frame corruption.
+
+            Benefits:
+            - Better frame synchronization
+            - Reduced image artifacts
+            - Improved timing accuracy
+            - Enhanced error detection
+
+            Recommended: Keep enabled for reliable video capture unless specifically
+            required to disable for compatibility with certain receivers.
+
+    config CAMERA_OV5647_ENABLE_MOTOR_BY_GPIO0
+        bool "Enable autofocus(AF) motor by OV5647's GPIO0"
+        default y if CAMERA_MOTOR_DEVICE_USED
+        default n
+        help
+            If enabled, the camera module will enable IO0 pin to drive the
+            VCM motor.
+
+            Enable the autofocus (AF) motor control through OV5647's GPIO0 pin.
+
+            When enabled, the camera module will use the sensor's GPIO0 pin to
+            provide power and control signals to the Voice Coil Motor (VCM)
+            used for autofocus functionality.
+
+            This option should be enabled when using camera modules that include
+            an autofocus lens system.
+
+            Note: Only enable if your camera module has an autofocus motor connected.
+
+    choice CAMERA_OV5647_IPA_JSON_CONFIGURATION_FILE
+        prompt "IPA Configuration File"
+        default CAMERA_OV5647_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+        help
+            Select the Image Processing Algorithm (IPA) JSON configuration file
+            for the OV5647 sensor.
+
+        config CAMERA_OV5647_DEFAULT_IPA_JSON_CONFIGURATION_FILE
+            bool "Use default configuration"
+            help
+                Use the built-in default IPA configuration file:
+                "esp_cam_sensor/sensors/ov5647/cfg/ov5647_default.json"
+
+                This configuration provides optimized settings for general use cases
+                and is recommended for most applications.
+
+        config CAMERA_OV5647_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+            bool "Use custom configuration"
+            help
+                Use a custom IPA configuration file with your own optimized settings.
+
+                This option allows you to fine-tune sensor parameters for specific
+                lighting conditions, color requirements, or application needs.
+
+                You must specify the custom file path in the configuration below.
+    endchoice
+
+    config CAMERA_OV5647_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE_PATH
+        string "Custom IPA configuration file path"
+        depends on CAMERA_OV5647_CUSTOMIZED_IPA_JSON_CONFIGURATION_FILE
+        help
+            Specify the path to your custom OV5647 IPA JSON configuration file.
+
+            The path is relative to your project root directory.
+
+            Example: "components/my_camera_config/ov5647_custom.json"
+
+            Ensure the file exists and contains valid JSON configuration
+            parameters compatible with the OV5647 sensor.
+endif

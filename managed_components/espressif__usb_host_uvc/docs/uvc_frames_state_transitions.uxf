@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>11</zoom_level>
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>330</x>
+      <y>594</y>
+      <w>198</w>
+      <h>121</h>
+    </coordinates>
+    <panel_attributes>*Frame in Empty Queue*
+--
+Frame is owned
+by the driver
+-.
+There can be more frames
+in the Empty Queue
+valign=top
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>759</x>
+      <y>594</y>
+      <w>198</w>
+      <h>121</h>
+    </coordinates>
+    <panel_attributes>*Active Frame*
+--
+Frame is owned
+by the driver
+-.
+There can be only
+1 active frame
+valign=top
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>517</x>
+      <y>660</y>
+      <w>264</w>
+      <h>44</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uvc_frame_get_empty()</panel_attributes>
+    <additional_attributes>10.0;20.0;220.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>616</x>
+      <y>506</y>
+      <w>264</w>
+      <h>154</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uvc_frame_add_data()</panel_attributes>
+    <additional_attributes>130.0;120.0;50.0;120.0;50.0;20.0;220.0;20.0;220.0;80.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>946</x>
+      <y>660</y>
+      <w>286</w>
+      <h>66</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uvc_host_frame_callback_t()
+&lt;&lt; callback&gt;&gt;
+</panel_attributes>
+    <additional_attributes>10.0;20.0;240.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLState</id>
+    <coordinates>
+      <x>1210</x>
+      <y>594</y>
+      <w>198</w>
+      <h>121</h>
+    </coordinates>
+    <panel_attributes>*Process Frame*
+--
+Frame is owned
+by the user
+-.
+There can be more frames
+that are being processed
+valign=top
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>407</x>
+      <y>704</y>
+      <w>913</w>
+      <h>121</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uvc_host_frame_return()</panel_attributes>
+    <additional_attributes>810.0;10.0;810.0;90.0;10.0;90.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLSyncBarVertical</id>
+    <coordinates>
+      <x>1078</x>
+      <y>429</y>
+      <w>22</w>
+      <h>429</h>
+    </coordinates>
+    <panel_attributes>template=txt
+title=titletext
+bg=red</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>792</x>
+      <y>418</y>
+      <w>319</w>
+      <h>55</h>
+    </coordinates>
+    <panel_attributes>Driver
+ownership
+lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;20.0;270.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1078</x>
+      <y>418</y>
+      <w>286</w>
+      <h>55</h>
+    </coordinates>
+    <panel_attributes>User
+ownership
+lt=&lt;-</panel_attributes>
+    <additional_attributes>240.0;20.0;10.0;20.0</additional_attributes>
+  </element>
+</diagram>

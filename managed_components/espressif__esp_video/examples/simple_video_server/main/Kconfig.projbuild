@@ -1,0 +1,63 @@
+menu "Example Configuration"
+    
+    config EXAMPLE_CAMERA_VIDEO_BUFFER_NUMBER
+        int "Camera video buffer number"
+        default 2
+        help
+            Number of video buffers for the camera sensor.
+            
+            More buffers provide better performance and reduce frame drops,
+            but consume more memory. Recommended range: 2-4 buffers.
+            
+            - 2 buffers: Minimum for basic operation
+            - 3-4 buffers: Better performance for smooth streaming
+            - Higher values: May improve performance but increase memory usage
+
+    config EXAMPLE_JPEG_COMPRESSION_QUALITY
+        int "JPEG compression quality (%)"
+        default 80
+        range 1 100
+        help
+            JPEG compression quality percentage (1-100).
+
+            Higher values produce better image quality but larger data streams:
+            - 90-100: Excellent quality, high bandwidth usage
+            - 70-90: Good quality, moderate bandwidth (recommended for UVC)
+            - 50-70: Acceptable quality, lower bandwidth
+            - 1-50: Poor quality, minimal bandwidth
+
+            For UVC streaming, consider the USB bandwidth limitations
+            and host system capabilities when choosing quality level.
+
+            Recommended: 80 for balanced quality and performance.
+
+    config EXAMPLE_HTTP_PART_BOUNDARY
+        string "HTTP part boundary"
+        default "123456789000000000000987654321"
+        help
+            HTTP multipart boundary string used for MJPEG streaming.
+            
+            This boundary separates different parts in the HTTP multipart response.
+            Must be unique and not appear in the video data. The default value
+            is designed to be unique and safe for most applications.
+    
+    config EXAMPLE_MDNS_INSTANCE
+        string "mDNS instance"
+        default "web-cam"
+        help
+            mDNS instance name for service discovery.
+            
+            This name will be used to identify the camera service on the network.
+            Other devices can discover this camera using this instance name
+            through mDNS/Bonjour protocols.
+    
+    config EXAMPLE_MDNS_HOST_NAME
+        string "mDNS host name"
+        default "esp-web"
+        help
+            mDNS host name for the ESP32 device.
+            
+            This hostname will be used for network identification and can be
+            accessed as "esp-web.local" on the local network (if mDNS is supported
+            by the client device).
+endmenu

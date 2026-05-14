@@ -1,0 +1,53 @@
+menuconfig CAM_MOTOR_DW9714
+    bool "DW9714"
+    default n
+    select CAMERA_MOTOR_DEVICE_USED
+    help
+        Enable support for the DW9714 Voice Coil Motor (VCM) autofocus actuator.
+
+if CAM_MOTOR_DW9714
+    config CAM_MOTOR_DW9714_AUTO_DETECT
+        bool "Auto detect DW9714"
+        default y
+        help
+            When enabled, the DW9714 motor will be automatically detected and
+            initialized during system startup without requiring manual detection
+            calls in your application.
+
+            The auto-detection process uses I2C communication to identify and
+            configure the motor with the default settings.
+
+    choice CAM_MOTOR_DW9714_DEFAULT_FMT
+        prompt "Default format select"
+        default CAM_MOTOR_DW9714_DLC_MCLK02_SRC17
+        help
+            A "format" structure stores the motor device initialization parameters.
+            This setting selects which default format to load when the motor is detected.
+
+        config CAM_MOTOR_DW9714_LSC_MCLK01_SRC03
+            bool "LSC(Linear Step Control) mode with mclk01 src03"
+            help
+                Linear Step Control mode with moderate clock and source settings.
+
+                Configuration: MCLK=01, SRC=03
+        config CAM_MOTOR_DW9714_DLC_MCLK02_SRC17
+            bool "DLC(Direct Linear Control) mode with mclk02 src17"
+            help
+                Direct Linear Control mode with higher clock and source settings.
+
+                Configuration: MCLK=02, SRC=17
+    endchoice # CAM_MOTOR_DW9714_DEFAULT_FMT
+
+    config DW9714_FORMAT_INDEX_DEFAULT
+        int
+        default 0 if CAM_MOTOR_DW9714_LSC_MCLK01_SRC03
+        default 1 if CAM_MOTOR_DW9714_DLC_MCLK02_SRC17
+        help
+            Internal format index for the selected default motor configuration.
+
+            This value corresponds to the control mode index used internally
+            by the driver to configure the motor with the selected default mode.
+
+            For additional format options and runtime configuration changes,
+            use the query_support_formats() API function.
+endif

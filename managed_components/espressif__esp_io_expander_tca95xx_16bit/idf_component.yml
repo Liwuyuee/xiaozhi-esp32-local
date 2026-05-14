@@ -1,0 +1,12 @@
+dependencies:
+  esp_io_expander:
+    public: true
+    version: ^1.0.1
+  idf: '>=5.2'
+description: ESP IO Expander - tca9539 and tca9555
+repository: git://github.com/espressif/esp-bsp.git
+repository_info:
+  commit_sha: 1bd663be5317bfc4457335011889eec5db33098d
+  path: components/io_expander/esp_io_expander_tca95xx_16bit
+url: https://github.com/espressif/esp-bsp/tree/master/components/io_expander/esp_io_expander_tca95xx_16bit
+version: 2.0.1
