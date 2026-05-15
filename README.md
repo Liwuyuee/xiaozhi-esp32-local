@@ -4,7 +4,7 @@
 [![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.5-blue)](https://github.com/espressif/esp-idf)
 [![Platform](https://img.shields.io/badge/Platform-ESP32--S3-orange)](https://www.espressif.com/)
 
-**基于 [xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)（虾哥开源项目）的增强版本，核心新增离线语音命令识别功能。**
+**基于 [xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)的增强版本，核心新增离线语音命令识别功能。**
 
 当设备无法连接服务器时，自动降级为本地离线模式，通过 ESP-SR 多命令词识别在端侧执行语音指令，实现"有网用云端、无网不中断"的双模语音交互体验。
 
